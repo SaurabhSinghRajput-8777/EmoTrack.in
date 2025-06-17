@@ -1,0 +1,533 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+#app {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+#app:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+header h1 {
+    text-align: left;
+    font-size: 1.8em;
+    margin: 0.5em 0;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.emotrack-em {
+    color: black;
+}
+
+.emotrack-track {
+    color: #8b5cf6;
+}
+
+.welcome-message {
+    font-weight: bold;
+    font-size: 1.2em;
+    animation: fadeIn 0.5s ease-in-out;
+    transition: transform 0.3s ease;
+}
+
+.welcome-message:hover {
+    transform: translateY(-3px);
+}
+  
+h2 {
+    text-align: center;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 2.0em;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.home-button {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.home-button:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.home-button i {
+    margin-right: 5px; /* Space between icon and text */
+}
+/* Grid container for the top cards */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+/* Feature grid for the bottom cards */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+/* Feature card styling */
+.feature-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Icon circle styling */
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+/* For tablet and desktop */
+@media (min-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+/* Add this to your @keyframes section if not already present */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Add this for styling the feature cards */
+.mb-8 {
+    margin-bottom: 32px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+form p {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1.2em;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+form label {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
+
+form label:hover {
+    transform: translateX(5px);
+}
+
+input, button, textarea {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+input:focus, textarea:focus {
+    border-color: #8b5cf6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
+button {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.hidden {
+    display: none;
+}
+
+.page {
+    padding: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+a {
+    color: #8b5cf6;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #3b82f6;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e2e8f0;
+    border-radius: 10px;
+    margin: 10px 0;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar div {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+#low {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+#moderate {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+#high {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+#management-tips-page ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#management-tips-page ul li {
+    background: #f0f4c3;
+    margin: 10px 0;
+    padding: 15px;
+    border-left: 4px solid #8b5cf6;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+    animation-fill-mode: both;
+}
+
+#management-tips-page ul li:hover {
+    transform: translateX(5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+#management-tips-page ul li:nth-child(1) { animation-delay: 0.1s; }
+#management-tips-page ul li:nth-child(2) { animation-delay: 0.2s; }
+#management-tips-page ul li:nth-child(3) { animation-delay: 0.3s; }
+#management-tips-page ul li:nth-child(4) { animation-delay: 0.4s; }
+#management-tips-page ul li:nth-child(5) { animation-delay: 0.5s; }
+
+.consultation-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.consultation-btn:hover {
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 20px rgba(0, 0, 0, 0.1);
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 20px;
+    border-radius: 0 0 12px 12px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+footer p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.9em;
+    transition: color 0.3s ease;
+}
+
+footer p:hover {
+    color: #3b82f6;
+}
+
+/* Logo Styling */
+#logo {
+    display: block;
+    margin: 0 auto 20px; /* Center the logo and add margin at the bottom */
+    max-width: 150px; /* Adjust size as needed */
+    height: auto; /* Maintain aspect ratio */
+    animation: fadeIn 0.5s ease-in-out;
+    transition: transform 0.3s ease;
+}
+
+#logo:hover {
+    transform: scale(1.05);
+}
+
+/* New Proceed Button Styling */
+#proceed-button {
+    display: block;
+    margin: 15px auto; /* Center the button */
+    padding: 12px 24px; /* Adjust padding as needed */
+    font-size: 16px; /* Adjust font size as needed */
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+#proceed-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+#contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+#contact-form input, #contact-form textarea {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#contact-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+#contact-form input:focus, #contact-form textarea:focus {
+    border-color: #8b5cf6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
+#contact-form button {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#contact-form button:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+#consultation-page > div > p {
+    margin: 10px 0;
+    font-size: 1em;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* New Stress Reports Table Styling */
+.reports-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.reports-table th, .reports-table td {
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+.reports-table th {
+    background: linear-gradient(90deg, #f9fafb, #f3f4f6);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.05em;
+}
+
+.reports-table tr {
+    transition: background-color 0.3s ease;
+}
+
+.reports-table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.reports-table tr:hover {
+    background-color: #eef2ff;
+}
+
+.low-stress {
+    color: #10b981;
+    font-weight: bold;
+}
+
+.moderate-stress {
+    color: #f59e0b;
+    font-weight: bold;
+}
+
+.high-stress {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* Logout button */
+#logout-btn {
+    margin-top: 20px;
+    background: linear-gradient(90deg, #f87171, #ef4444);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#logout-btn:hover {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.2), 0 4px 6px -2px rgba(239, 68, 68, 0.1);
+}
+
+/* Card hover effect class */
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Stress bar class */
+.stress-bar {
+    height: 20px;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Gradient text class */
+.gradient-text {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Fade-in animation class */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    #app {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    input, button, textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    header h1 {
+        font-size: 1.5em;
+    }
+    
+    h2 {
+        font-size: 1.3em;
+    }
+}
