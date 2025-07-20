@@ -12,6 +12,8 @@
     --border-color: #e2e8f0;
     --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --border-radius-md: 12px;
+    --border-radius-sm: 8px;
 }
 
 /* --- General & Body Styles --- */
@@ -19,14 +21,19 @@ body {
     font-family: var(--font-family);
     margin: 0;
     padding: 0;
-    background-color: var(--colors-green-50);
     color: var(--text-dark);
+    
+    background-image: url("../images/bg image.png");
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
 }
 
 #app-container {
     width: 100%;
     min-height: 100vh;
-    background: #ffffff;
+    background: transparent; 
     display: flex;
     flex-direction: column;
 }
@@ -44,8 +51,10 @@ body {
 .app-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
     flex-shrink: 0;
+    margin-bottom: 1.5rem;
 }
 
 .logo-title {
@@ -60,13 +69,14 @@ body {
 .logo-track { color: var(--colors-green-400); }
 
 .app-footer {
-    padding: 1.5rem;
+    padding: 1.0rem;
     text-align: center;
     font-size: 0.8rem;
     color: var(--text-light);
-    background-color: #f7fafc;
+    background-color: rgb(247, 250, 252,0.8);
     border-top: 1px solid var(--border-color);
     flex-shrink: 0;
+    margin-top: 1.5rem;
 }
 
 /* --- Page & Content Styles --- */
@@ -76,9 +86,29 @@ body {
 
 .page-content {
     max-width: 960px;
+    align-self: center;
     margin: 0 auto;
     padding: 2rem 1.5rem;
     animation: fadeIn 0.4s ease;
+}
+
+/* Applying consistent padding and background */
+.card,
+.questionnaire .question,
+.report-card,
+.auth-form-container,
+.coping-list li, 
+.resource-list li, 
+.consultant-info p {
+    background-color: #ffffff;
+    border-radius: var(--border-radius-md);
+    padding: 1.8rem; /* The key change: ensuring consistent padding */
+}
+
+/* Special case for report card which has internal sections */
+.report-card {
+    padding: 0; /* Reset padding on the main card to allow sections to control it */
+    overflow: hidden; /* Important for border-radius on children */
 }
 
 .page-title {
@@ -94,7 +124,10 @@ body {
     color: var(--text-light);
     text-align: center;
     max-width: 500px;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 0.8rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 1rem;
+    border-radius: var(--border-radius-md);
 }
 .section-title {
     color: var(--colors-green-400);
@@ -109,7 +142,7 @@ body {
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     border: none;
     cursor: pointer;
     text-align: center;
@@ -144,6 +177,7 @@ body {
 .auth-form-container {
     max-width: 400px;
     margin: 0 auto;
+    padding: 2rem;
 }
 
 .auth-form-container form {
@@ -156,7 +190,7 @@ body {
     padding: 0.75rem;
     font-size: 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     box-sizing: border-box;
     margin-bottom: 1.25rem; 
 }
@@ -187,9 +221,9 @@ body {
 
 /* Welcome Page */
 .welcome-logo {
-    width: 150px;
+    width: 360px; /* Increased from 150px */
     height: auto;
-    margin: 0 auto 2rem;
+    margin: 0 auto 0rem;
 }
 
 /* Dashboard */
@@ -199,18 +233,7 @@ body {
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
-.card {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--card-shadow-hover);
-}
+
 .card-title {
     font-size: 1.2rem;
     font-weight: 700;
@@ -238,7 +261,7 @@ body {
     justify-content: center;
     color: var(--text-light);
     background-color: #f7fafc;
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
 }
 .icon-red { color: #ef4444; }
 .icon-green { color: var(--colors-green-300); }
@@ -249,12 +272,7 @@ body {
     flex-direction: column;
     gap: 1.5rem;
 }
-.questionnaire .question {
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: #f7fafc;
-}
+
 .questionnaire p {
     font-weight: 500;
     margin: 0 0 1rem 0;
@@ -280,13 +298,13 @@ body {
     width: 100%;
     height: 25px;
     background-color: var(--colors-green-100);
-    border-radius: 12px;
+    border-radius: 25px;
     overflow: hidden;
     margin: 1rem 0;
 }
 .progress-fill {
     height: 100%;
-    border-radius: 12px;
+    border-radius: 25px;
     transition: width 0.5s ease-in-out;
 }
 .progress-bar.low .progress-fill { background-color: var(--colors-green-200); }
@@ -302,14 +320,6 @@ body {
     margin-bottom: 2rem;
 }
 
-.report-card {
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
-    overflow: hidden;
-    border-left: 5px solid;
-}
-
 .report-card.low-stress { border-left-color: var(--colors-green-300); }
 .report-card.moderate-stress { border-left-color: #f59e0b; }
 .report-card.high-stress { border-left-color: #ef4444; }
@@ -319,7 +329,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.5rem; /* Adding padding here */
     background-color: #f7fafc;
     border-bottom: 1px solid var(--border-color);
 }
@@ -343,7 +353,7 @@ body {
 
 
 .report-body {
-    padding: 1.5rem;
+    padding: 1.5rem; /* Adding padding here */
 }
 .report-body p {
     margin: 0;
@@ -351,7 +361,7 @@ body {
 }
 
 .report-footer {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.5rem; /* Adding padding here */
     text-align: right;
     background-color: #f7fafc;
     border-top: 1px solid var(--border-color);
@@ -363,13 +373,7 @@ body {
     list-style: none;
     padding: 0;
 }
-.coping-list li, .resource-list li, .consultant-info p {
-    background-color: var(--colors-green-50);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid var(--colors-green-300);
-    border-radius: 4px;
-}
+
 .resource-list a {
     color: var(--colors-green-400);
     text-decoration: none;
