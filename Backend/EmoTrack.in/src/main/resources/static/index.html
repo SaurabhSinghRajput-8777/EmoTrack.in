@@ -4,209 +4,213 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EmoTrack.in - Stress Monitoring & Management</title>
-    <link rel="stylesheet" href="/css/styl.css">
+    <link rel="stylesheet" href="css/styl.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <div id="app" class="fade-in">
-        <header>
-            <h1 class="gradient-text" style="cursor: pointer;" onclick="goToPage('main-page')">
-                <span class="emotrack-em">Emo</span>
-                <span class="emotrack-track">Track.in</span>
+
+    <main id="app-container">
+        <header class="app-header">
+            <h1 class="logo-title" onclick="goToPage('main-page')">
+                <span class="logo-em">Emo</span><span class="logo-track">Track.in</span>
             </h1>
         </header>
-        <!-- Welcome Page -->
-        <section id="welcome-page" class="page fade-in">
-            <img src="./images/EmoTrack Logo.jpg" alt="EmoTrack.in Logo" id="logo">
-            <h2 class="gradient-text">Welcome to EmoTrack.in</h2>
-            <p class="fade-in">EmoTrack is an innovative stress management tool designed to help you monitor, understand, and manage your stress levels effectively. By combining advanced tracking technologies with personalized coping strategies, EmoTrack empowers you to take control of your mental well-being and lead a more balanced life.</p>
 
-            <!-- Proceed Button -->
-            <button id="proceed-button" class="fade-in">Proceed</button>
-        </section>
-
-        <!-- Login Page -->
-        <section id="login-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Login</h2>
-            <form id="login-form">
-                <input type="text" id="username" placeholder="Username" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button type="button">Login</button>
-                <p>Don't have an account? <a href="#">Sign up here</a></p>
-            </form>
-        </section>
-
-        <!-- Signup Page -->
-        <section id="signup-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Sign Up</h2>
-            <form id="signup-form">
-                <input type="text" id="new-username" placeholder="Username" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="new-password" placeholder="Password" required>
-                <input type="text" id="name" placeholder="Your Name" required>
-                <input type="number" id="age" placeholder="Your Age" required min="18" max="100">
-                <button type="button">Sign Up</button>
-                <p>Already have an account? <a href="#" onclick="goToPage('login-page')">Login here</a></p>
-            </form>
-        </section>
-
-        <!-- Main Page -->
-        <section id="main-page" class="page hidden fade-in">
-            <div class="mb-8">
-                <h2 class="gradient-text">Welcome back, <span id="user-name"></span>!</h2>
-                <p class="welcome-message fade-in">How are you feeling today?</p>
+        <section id="welcome-page" class="page">
+            <div class="page-content text-center">
+                <img src="./images/EmoTrack Logo.jpg" alt="EmoTrack.in Logo" class="welcome-logo">
+                <h2 class="page-title">Welcome to EmoTrack.in</h2>
+                <p class="page-intro">
+                    EmoTrack is an innovative stress management tool designed to help you monitor, understand, and manage your stress levels effectively.
+                </p>
+                <button id="proceed-button" class="btn btn-primary">Proceed</button>
             </div>
-            
-            <div class="grid-container">
-                <!-- Stress Level Card -->
-                <div class="card-hover" style="background: linear-gradient(90deg, #ebf5ff, #f5f3ff); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    <h3 style="font-weight: bold; font-size: 1.2em; margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="fas fa-heartbeat" style="color: #ef4444; margin-right: 12px;"></i> Your Stress Level
-                    </h3>
-                    <div id="current-stress" style="font-size: 2.2em; font-weight: bold; margin-bottom: 8px;">--</div>
-                    <p style="color: #666; margin-bottom: 16px;">Last checked: <span id="last-checked">Never</span></p>
-                    <button onclick="goToPage('questionnaire-page')" 
-                            style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: white; font-weight: 500; padding: 8px 24px; border-radius: 8px; border: none; transition: all 0.3s ease; cursor: pointer;">
-                        Take Stress Test <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
-                    </button>
+        </section>
+
+        <section id="login-page" class="page hidden">
+            <div class="page-content auth-form-container">
+                <h2 class="page-title">Login</h2>
+                <form id="login-form">
+                    <input type="text" id="username" placeholder="Username" required class="form-input">
+                    <input type="password" id="password" placeholder="Password" required class="form-input">
+                    <button type="button" class="btn btn-primary">Login</button>
+                    <p class="auth-switch">Don't have an account? <a href="#" onclick="goToPage('signup-page')">Sign up here</a></p>
+                </form>
+            </div>
+        </section>
+
+        <section id="signup-page" class="page hidden">
+            <div class="page-content auth-form-container">
+                <h2 class="page-title">Sign Up</h2>
+                <form id="signup-form">
+                    <input type="text" id="new-username" placeholder="Username" required class="form-input">
+                    <input type="email" id="email" placeholder="Email" required class="form-input">
+                    <input type="password" id="new-password" placeholder="Password" required class="form-input">
+                    <input type="text" id="name" placeholder="Your Name" required class="form-input">
+                    <input type="number" id="age" placeholder="Your Age" required min="18" max="100" class="form-input">
+                    <button type="button" class="btn btn-primary">Sign Up</button>
+                    <p class="auth-switch">Already have an account? <a href="#" onclick="goToPage('login-page')">Login here</a></p>
+                </form>
+            </div>
+        </section>
+
+        <section id="main-page" class="page hidden">
+            <div class="page-content">
+                <div class="welcome-header">
+                    <h2 class="page-title">Welcome back, <span id="user-name"></span> !</h2>
+                    <p class="welcome-message">How are you feeling today?</p>
                 </div>
                 
-                <!-- Stress Trend Card - Now clickable -->
-                <div class="card-hover" style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer;" onclick="loadStressReports(); goToPage('reports-page');">
-                    <h3 style="font-weight: bold; font-size: 1.2em; margin-bottom: 16px; display: flex; align-items: center;">
-                        <i class="fas fa-chart-line" style="color: #10b981; margin-right: 12px;"></i> Stress Trend
-                    </h3>
-                    <div style="height: 160px; display: flex; align-items: center; justify-content: center; color: #888;">
-                        <p>Click to view your stress history and trends</p>
+                <div class="dashboard-grid">
+                    <div class="card stress-level-card">
+                        <h3 class="card-title"><i class="fas fa-heartbeat icon-red"></i> Your Stress Level</h3>
+                        <div id="current-stress" class="stress-reading">--</div>
+                        <p class="last-checked">Last checked: <span id="last-checked">Never</span></p>
+                        <button onclick="goToPage('questionnaire-page')" class="btn btn-primary">
+                            Take Stress Test <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="card stress-trend-card" onclick="loadStressReports(); goToPage('reports-page');">
+                        <h3 class="card-title"><i class="fas fa-chart-line icon-green"></i> Stress Trend</h3>
+                        <div class="trend-placeholder">
+                            <p>Click to view your stress history and trends</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="feature-grid">
-                <!-- Add logout button -->
-                <button id="logout-btn" class="card-hover" style="margin-top: 20px;">Logout</button>
+                <button id="logout-btn" class="btn btn-danger">Logout</button>
             </div>
         </section>
 
-        <!-- Questionnaire Page -->
-        <section id="questionnaire-page" class="page hidden fade-in">
-            <button class="home-button card-hover" onclick="goToPage('main-page')">
-                <i class="fas fa-home"></i> Home
-            </button>
-            <h2 class="gradient-text">Stress Questionnaire</h2>
-            <form id="questionnaire-form">
-                <p class="gradient-text">1. How often do you feel overwhelmed by responsibilities?</p>
-                <label><input type="radio" name="q1" value="1" required> Rarely</label>
-                <label><input type="radio" name="q1" value="2"> Sometimes</label>
-                <label><input type="radio" name="q1" value="3"> Often</label>
-
-                <p class="gradient-text">2. Do you feel pressured by deadlines or expectations?</p>
-                <label><input type="radio" name="q2" value="1" required> Rarely</label>
-                <label><input type="radio" name="q2" value="2"> Sometimes</label>
-                <label><input type="radio" name="q2" value="3"> Often</label>
-
-                <p class="gradient-text">3. How often do you feel lonely or isolated?</p>
-                <label><input type="radio" name="q3" value="1" required> Rarely</label>
-                <label><input type="radio" name="q3" value="2"> Sometimes</label>
-                <label><input type="radio" name="q3" value="3"> Often</label>
-
-                <p class="gradient-text">4. Do you feel like you have a good work-life balance?</p>
-                <label><input type="radio" name="q4" value="1" required> Rarely</label>
-                <label><input type="radio" name="q4" value="2"> Sometimes</label>
-                <label><input type="radio" name="q4" value="3"> Often</label>
-
-                <p class="gradient-text">5. How often do you react angrily to minor inconveniences?</p>
-                <label><input type="radio" name="q5" value="1" required> Rarely</label>
-                <label><input type="radio" name="q5" value="2"> Sometimes</label>
-                <label><input type="radio" name="q5" value="3"> Often</label>
-
-                <p class="gradient-text">6. How often do you feel a rapid heartbeat or shortness of breath?</p>
-                <label><input type="radio" name="q6" value="1" required> Rarely</label>
-                <label><input type="radio" name="q6" value="2"> Sometimes</label>
-                <label><input type="radio" name="q6" value="3"> Often</label>
-
-                <p class="gradient-text">7. Have you noticed an increase in your blood pressure or heart rate due to stress?</p>
-                <label><input type="radio" name="q7" value="1" required> Rarely</label>
-                <label><input type="radio" name="q7" value="2"> Sometimes</label>
-                <label><input type="radio" name="q7" value="3"> Often</label>
-
-                <button type="button" class="card-hover">Submit</button>
-                <button type="button" onclick="resetQuestionnaireForm()">Clear Answers</button>
-            </form>
-        </section>
-
-        <!-- Stress Level Analysis Page -->
-        <section id="analysis-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Stress Level Analysis</h2>
-            <p>Your stress level is: <span id="stress-level" class="gradient-text"></span></p>
-            <div id="stress-bar" class="progress-bar">
-                <div class="stress-bar"></div>
+        <section id="questionnaire-page" class="page hidden">
+            <div class="page-content">
+                <button class="home-button" onclick="goToPage('main-page')"><i class="fas fa-home"></i> Home</button>
+                <h2 class="page-title">Stress Questionnaire</h2>
+                <form id="questionnaire-form" class="questionnaire">
+                    <div class="question">
+                        <p>1. How often do you feel overwhelmed by responsibilities?</p>
+                        <label><input type="radio" name="q1" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q1" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q1" value="3"> Often</label>
+                    </div>
+                    <div class="question">
+                        <p>2. Do you feel pressured by deadlines or expectations?</p>
+                        <label><input type="radio" name="q2" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q2" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q2" value="3"> Often</label>
+                    </div>
+                     <div class="question">
+                        <p>3. How often do you feel lonely or isolated?</p>
+                        <label><input type="radio" name="q3" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q3" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q3" value="3"> Often</label>
+                    </div>
+                     <div class="question">
+                        <p>4. Do you feel like you have a good work-life balance?</p>
+                        <label><input type="radio" name="q4" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q4" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q4" value="3"> Often</label>
+                    </div>
+                     <div class="question">
+                        <p>5. How often do you react angrily to minor inconveniences?</p>
+                        <label><input type="radio" name="q5" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q5" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q5" value="3"> Often</label>
+                    </div>
+                     <div class="question">
+                        <p>6. How often do you feel a rapid heartbeat or shortness of breath?</p>
+                        <label><input type="radio" name="q6" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q6" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q6" value="3"> Often</label>
+                    </div>
+                     <div class="question">
+                        <p>7. Have you noticed an increase in your blood pressure or heart rate due to stress?</p>
+                        <label><input type="radio" name="q7" value="1" required> Rarely</label>
+                        <label><input type="radio" name="q7" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q7" value="3"> Often</label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary">Submit</button>
+                        <button type="button" onclick="resetQuestionnaireForm()" class="btn btn-secondary">Clear Answers</button>
+                    </div>
+                </form>
             </div>
-            <button type="button" class="card-hover">View Coping Strategies</button>
         </section>
 
-        <!-- Coping Strategies Page -->
-        <section id="management-tips-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Coping Strategies</h2>
-            <div id="coping-strategies" class="fade-in"></div>
-            <button type="button" onclick="goToPage('main-page')" class="card-hover">Back to Main Page</button>
-            <button type="button" class="consultation-btn card-hover">Consultation</button>
+        <section id="analysis-page" class="page hidden">
+            <div class="page-content text-center">
+                <h2 class="page-title">Stress Level Analysis</h2>
+                <p class="stress-result-text">Your stress level is: <span id="stress-level"></span></p>
+                <div id="stress-bar" class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <button type="button" class="btn btn-primary">View Coping Strategies</button>
+            </div>
         </section>
 
-        <!-- Reports Page -->
-        <section id="reports-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Old Stress Reports</h2>
-            <p class="fade-in">Here you can view your previous stress test results.</p>
-            <!-- Reports will be loaded here dynamically -->
-            <button type="button" onclick="goToPage('main-page')" class="card-hover">Back to Main Page</button>
+        <section id="management-tips-page" class="page hidden">
+            <div class="page-content">
+                <h2 class="page-title">Coping Strategies</h2>
+                <div id="coping-strategies" class="coping-list"></div>
+                <div class="page-actions">
+                    <button type="button" onclick="goToPage('main-page')" class="btn btn-secondary">Back to Main Page</button>
+                    <button type="button" class="btn btn-primary consultation-btn">Consultation</button>
+                </div>
+            </div>
         </section>
 
-        <!-- Consultation Page -->
-        <section id="consultation-page" class="page hidden fade-in">
-            <h2 class="gradient-text">Consultation</h2>
+        <section id="reports-page" class="page hidden">
+            <div class="page-content">
+                <h2 class="page-title">Old Stress Reports</h2>
+                <p class="page-intro">Here you can view your previous stress test results.</p>
+                <button type="button" onclick="goToPage('main-page')" class="btn btn-secondary">Back to Main Page</button>
+            </div>
+        </section>
 
-            <!-- Contact Form -->
-            <form id="contact-form" class="fade-in">
-                <label for="contact-name">Name</label>
-                <input type="text" id="contact-name" placeholder="Your Name" required>
+        <section id="consultation-page" class="page hidden">
+            <div class="page-content">
+                <h2 class="page-title">Consultation</h2>
+                <form id="contact-form" class="contact-form">
+                    <label for="contact-name">Name</label>
+                    <input type="text" id="contact-name" placeholder="Your Name" required class="form-input">
+                    
+                    <label for="contact-email">Email</label>
+                    <input type="email" id="contact-email" placeholder="Your Email" required class="form-input">
+                    
+                    <label for="contact-message">Message</label>
+                    <textarea id="contact-message" placeholder="Your Message" required class="form-input"></textarea>
+                    
+                    <button type="button" class="btn btn-primary">Submit</button>
+                </form>
+
+                <div class="resources-section">
+                    <h3 class="section-title">Resources</h3>
+                    <ul class="resource-list">
+                        <li><a href="https://www.stress.org" target="_blank">American Institute of Stress</a></li>
+                        <li><a href="https://www.helpguide.org" target="_blank">HelpGuide: Stress Management</a></li>
+                        <li><a href="https://www.mind.org.uk" target="_blank">Mind: Mental Health Support</a></li>
+                    </ul>
+                </div>
                 
-                <label for="contact-email">Email</label>
-                <input type="email" id="contact-email" placeholder="Your Email" required>
+                <div class="consultants-section">
+                    <h3 class="section-title">Our Consultants</h3>
+                    <div class="consultant-info">
+                        <p><b>Dr. Arjun Kapoor</b><br>Contact: +44 123 456 7890</p>
+                        <p><b>Dr. Priya Sharma</b><br>Contact: +44 987 654 3210</p>
+                    </div>
+                </div>
                 
-                <label for="contact-message">Message</label>
-                <textarea id="contact-message" placeholder="Your Message" required></textarea>
-                
-                <button type="button" class="card-hover">Submit</button>
-            </form>
-
-            <!-- Resources Section -->
-            <h3 class="gradient-text fade-in">Resources</h3>
-            <ul class="fade-in">
-                <li class="card-hover"><a href="https://www.stress.org" target="_blank">American Institute of Stress</a></li>
-                <li class="card-hover"><a href="https://www.helpguide.org" target="_blank">HelpGuide: Stress Management</a></li>
-                <li class="card-hover"><a href="https://www.mind.org.uk" target="_blank">Mind: Mental Health Support</a></li>
-            </ul>
-            
-            <!-- Consultants Section -->
-            <h3 class="gradient-text fade-in">Our Consultants</h3>
-            <div class="fade-in">
-                <p class="card-hover"><b>Dr. Arjun Kapoor</b><br>
-                Contact: +44 123 456 7890</p>
-
-                <p class="card-hover"><b>Dr. Priya Sharma</b><br>
-                Contact: +44 987 654 3210</p>
+                <button type="button" onclick="goToPage('main-page')" class="btn btn-secondary">Back to Main Page</button>
             </div>
-            
-            <button type="button" onclick="goToPage('main-page')" class="card-hover">Back to Main Page</button>
         </section>
 
-        <footer class="fade-in">
-            <p>This tool is for informational purposes only and should not be considered as medical advice. If you're experiencing severe stress, please consult a healthcare professional.</p>
+        <footer class="app-footer">
+            <p>This tool is for informational purposes only. Please consult a healthcare professional for medical advice.</p>
             <p>&copy; 2025 EmoTrack.in - All Rights Reserved</p>
         </footer>
-    </div>
+    </main>
 
-    <script src="/js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>

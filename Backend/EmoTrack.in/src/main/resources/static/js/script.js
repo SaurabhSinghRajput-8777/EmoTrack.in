@@ -16,15 +16,22 @@ function resetQuestionnaireForm() {
 function goToPage(pageId) {
     // Hide all pages
     const pages = document.querySelectorAll('.page');
-    pages.forEach(page => page.classList.add('hidden'));
+    pages.forEach(page => {
+        if (!page.classList.contains('hidden')) {
+            page.classList.add('hidden');
+        }
+    });
+
+    // Show the target page
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.remove('hidden');
+    }
 
     // Reset questionnaire form if navigating to that page
     if (pageId === 'questionnaire-page') {
         resetQuestionnaireForm();
     }
-
-    // Show the target page
-    document.getElementById(pageId).classList.remove('hidden');
 }
 
 // Function to handle user signup
@@ -51,14 +58,11 @@ async function signup() {
     try {
         const response = await fetch(`${API_BASE_URL}/signup`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
         });
 
         if (response.ok) {
-            const data = await response.json();
             alert("Signup successful! Please login.");
             goToPage('login-page');
         } else {
@@ -81,26 +85,19 @@ async function login() {
         return;
     }
 
-    const loginData = {
-        username: username,
-        password: password
-    };
+    const loginData = { username: username, password: password };
 
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(loginData)
         });
 
         if (response.ok) {
-            const data = await response.json();
-            currentUser = data;
+            currentUser = await response.json();
             document.getElementById('user-name').innerText = currentUser.name || currentUser.username;
             goToPage('main-page');
-            // Update last checked time if available
             updateLastCheckedTime();
         } else {
             const errorText = await response.text();
@@ -112,23 +109,18 @@ async function login() {
     }
 }
 
-// Function to update the last checked time
+// Function to update the last checked time on the dashboard
 async function updateLastCheckedTime() {
     if (!currentUser) return;
     
     try {
         const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`);
-        
         if (response.ok) {
             const reports = await response.json();
             if (reports.length > 0) {
-                // Sort reports by date (newest first)
                 reports.sort((a, b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
                 const lastReport = reports[0];
-                
-                // Update last checked time
                 document.getElementById('last-checked').innerText = new Date(lastReport.assessmentDate).toLocaleString();
-                // Update current stress level
                 document.getElementById('current-stress').innerText = lastReport.stressLevel;
             }
         }
@@ -143,12 +135,9 @@ function logout() {
     goToPage('login-page');
 }
 
-// Function to calculate the stress level based on questionnaire answers
+// Function to calculate the stress level from the questionnaire
 function calculateStressLevel() {
-    // Get the values of all questionnaire answers
     const answers = document.querySelectorAll('#questionnaire-form input[type="radio"]:checked');
-    
-    // Check if all questions have been answered
     if (answers.length < 7) {
         alert("Please answer all questions");
         return;
@@ -159,175 +148,119 @@ function calculateStressLevel() {
         totalStressScore += parseInt(answer.value);
     });
 
-    // Determine stress level
-    let level, color;
-    if (totalStressScore <= 7) {
-        level = "Low";
-        color = "green";
-    } else if (totalStressScore <= 14) {
-        level = "Moderate";
-        color = "yellow";
-    } else {
-        level = "High";
-        color = "red";
-    }
+    let level;
+    if (totalStressScore <= 7) level = "Low";
+    else if (totalStressScore <= 14) level = "Moderate";
+    else level = "High";
 
-    // Save assessment to the backend
     saveStressAssessment(totalStressScore, level);
 
-    // Display the stress level and progress bar
     document.getElementById('stress-level').innerText = level;
     const stressBar = document.getElementById('stress-bar');
-    stressBar.innerHTML = `<div id="${level.toLowerCase()}" style="width: ${totalStressScore * 4.76}%"></div>`;
+    stressBar.className = 'progress-bar'; 
+    stressBar.classList.add(level.toLowerCase());
+    stressBar.querySelector('.progress-fill').style.width = `${(totalStressScore / 21) * 100}%`;
     goToPage('analysis-page');
 }
 
-// Function to save stress assessment to backend
+// Function to save stress assessment to the backend
 async function saveStressAssessment(totalStressScore, stressLevel) {
-    if (!currentUser) {
-        console.error("No user logged in");
-        return;
-    }
+    if (!currentUser) return;
 
     const assessment = {
         userId: currentUser.id,
         totalStressScore: totalStressScore,
         stressLevel: stressLevel
-        // No need to include assessmentDate as it's set in the backend
     };
 
     try {
         const response = await fetch(`${API_BASE_URL}/stress-assessment`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(assessment)
         });
-
         if (response.ok) {
-            // Update the last checked time and current stress level
             updateLastCheckedTime();
         } else {
-            const errorText = await response.text();
-            console.error("Failed to save assessment: " + errorText);
+            console.error("Failed to save assessment:", await response.text());
         }
     } catch (error) {
         console.error("Error saving assessment:", error);
     }
 }
 
-// Function to show coping strategies based on stress level
-function showCopingStrategies() {
-    const stressLevel = document.getElementById('stress-level').innerText.toLowerCase();
+// Function to show coping strategies based on a given stress level
+function showCopingStrategies(stressLevel) {
+    const level = stressLevel || document.getElementById('stress-level').innerText.toLowerCase();
     let strategies;
 
-    if (stressLevel === 'low') {
-        strategies = `
-            <h3>Low Stress</h3>
-            <ul>
-                <li><b>Mindfulness & Breathing:</b> Practice mindfulness meditation for 5-10 minutes daily and incorporate deep breathing exercises like the 4-7-8 technique to stay present and calm.</li>
-                <li><b>Physical Activity:</b> Engage in light exercise, such as walking or yoga, to release tension and improve your mood.</li>
-                <li><b>Social & Emotional Support:</b> Spend time with friends or family to strengthen social bonds and listen to relaxing or upbeat music to enhance your mood.</li>
-            </ul>`;
-    } else if (stressLevel === 'moderate') {
-        strategies = `
-            <h3>Moderate Stress</h3>
-            <ul>
-                <li><b>Cognitive Techniques:</b> Utilize Cognitive Behavioral Therapy (CBT) techniques to challenge negative thoughts and replace them with balanced perspectives.</li>
-                <li><b>Relaxation & Sleep:</b> Combine progressive muscle relaxation with mindful breathing and ensure you're getting quality sleep (7-9 hours) to recover effectively.</li>
-                <li><b>Creative Outlets & Visualization:</b> Engage in creative hobbies like painting or writing to distract and relax, and use visualization to imagine peaceful places or positive outcomes.</li>
-            </ul>`;
-    } else if (stressLevel === 'high') {
-        strategies = `
-            <h3>High Stress</h3>
-            <ul>
-                <li><b>Professional Help:</b> Seek guidance from a therapist or counselor for personalized coping tools.</li>
-                <li><b>Intense Physical Activity:</b> Engage in vigorous exercise such as running or high-intensity interval training (HIIT) to release built-up tension.</li>
-                <li><b>Grounding & Cold Exposure:</b> Use grounding techniques like the 5-4-3-2-1 method to stay present and reset your stress response with cold exposure, like a cold shower.</li>
-                <li><b>Relaxation Apps:</b> Use an app like Calm or Headspace to guide you through stress-relief techniques.</li>
-                <li><b>Extended Breathing Exercises:</b> Practice extended deep breathing techniques (box breathing or diaphragmatic breathing) to bring rapid relief.</li>
-            </ul>`;
+    if (level === 'low') {
+        strategies = `<h3>Low Stress</h3><ul><li><b>Mindfulness & Breathing:</b> Practice mindfulness meditation for 5-10 minutes daily.</li><li><b>Physical Activity:</b> Engage in light exercise, such as walking or yoga.</li><li><b>Social Support:</b> Spend time with friends or family.</li></ul>`;
+    } else if (level === 'moderate') {
+        strategies = `<h3>Moderate Stress</h3><ul><li><b>Cognitive Techniques:</b> Use CBT techniques to challenge negative thoughts.</li><li><b>Relaxation & Sleep:</b> Ensure you're getting 7-9 hours of quality sleep.</li><li><b>Creative Outlets:</b> Engage in hobbies like painting or writing.</li></ul>`;
+    } else {
+        strategies = `<h3>High Stress</h3><ul><li><b>Professional Help:</b> Seek guidance from a therapist or counselor.</li><li><b>Intense Physical Activity:</b> Engage in vigorous exercise like running or HIIT.</li><li><b>Grounding Techniques:</b> Use the 5-4-3-2-1 method to stay present.</li></ul>`;
     }
 
     document.getElementById('coping-strategies').innerHTML = strategies;
     goToPage('management-tips-page');
 }
 
-// Function to load and display stress reports for the logged-in user
+// Function to show coping strategies from the report page
+function showCopingStrategiesForReport(stressLevel) {
+    // We pass the stress level directly to the function
+    showCopingStrategies(stressLevel.toLowerCase());
+}
+
+// Function to load and display stress reports
 async function loadStressReports() {
-    if (!currentUser) {
-        console.error("No user logged in");
-        return;
-    }
+    if (!currentUser) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`);
-        
         if (response.ok) {
             const reports = await response.json();
             displayStressReports(reports);
         } else {
-            const errorText = await response.text();
-            console.error("Failed to load stress reports: " + errorText);
+            console.error("Failed to load stress reports:", await response.text());
         }
     } catch (error) {
         console.error("Error loading stress reports:", error);
     }
 }
 
-// Function to display stress reports in a table
+// Function to display stress reports in a card-based layout
 function displayStressReports(reports) {
-    const reportsContainer = document.getElementById('reports-page');
-    
+    const reportsPage = document.getElementById('reports-page');
+    const reportsContent = reportsPage.querySelector('.page-content');
+
+    const oldList = reportsContent.querySelector('.reports-list');
+    if (oldList) oldList.remove();
+
+    const reportsList = document.createElement('div');
+    reportsList.className = 'reports-list';
+
     if (reports.length === 0) {
-        reportsContainer.innerHTML = `
-            <h2>Old Stress Reports</h2>
-            <p>You haven't taken any stress tests yet.</p>
-            <button type="button" onclick="goToPage('main-page')">Back to Main Page</button>
-        `;
-        return;
+        reportsList.innerHTML = `<p class="page-intro">You haven't taken any stress tests yet.</p>`;
+    } else {
+        reports.sort((a, b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
+        reports.forEach(report => {
+            const date = new Date(report.assessmentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const card = document.createElement('div');
+            card.className = `report-card ${report.stressLevel.toLowerCase()}-stress`;
+            card.innerHTML = `
+                <div class="report-header">
+                    <span class="report-date">${date}</span>
+                    <span class="report-level">${report.stressLevel}</span>
+                </div>
+                <div class="report-body"><p>Your stress score was <strong>${report.totalStressScore}</strong>.</p></div>
+                <div class="report-footer"><button onclick="showCopingStrategiesForReport('${report.stressLevel}')" class="btn btn-secondary">View Strategies</button></div>`;
+            reportsList.appendChild(card);
+        });
     }
 
-    let tableHtml = `
-        <h2>Old Stress Reports</h2>
-        <table class="reports-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Stress Level</th>
-                    <th>Score</th>
-                    <th>Coping Strategies</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    reports.forEach(report => {
-        const date = new Date(report.assessmentDate).toLocaleDateString();
-        tableHtml += `
-            <tr>
-                <td>${date}</td>
-                <td class="${report.stressLevel.toLowerCase()}-stress">${report.stressLevel}</td>
-                <td>${report.totalStressScore}</td>
-                <td><button onclick="showCopingStrategiesForReport('${report.stressLevel}')">View</button></td>
-            </tr>
-        `;
-    });
-
-    tableHtml += `
-            </tbody>
-        </table>
-        <button type="button" onclick="goToPage('main-page')">Back to Main Page</button>
-    `;
-
-    reportsContainer.innerHTML = tableHtml;
-}
-
-// Function to show coping strategies for a specific report
-function showCopingStrategiesForReport(stressLevel) {
-    document.getElementById('stress-level').innerText = stressLevel;
-    showCopingStrategies();
+    const backButton = reportsContent.querySelector('.btn-secondary');
+    reportsContent.insertBefore(reportsList, backButton);
 }
 
 // Function to submit the contact form
@@ -340,48 +273,22 @@ function submitContactForm() {
         alert("Please fill in all fields");
         return;
     }
-
-    // Since there's no backend endpoint for this yet, just show success message
     alert("Thank you for your message. Our team will contact you soon!");
-    
-    // Clear form
-    document.getElementById('contact-name').value = '';
-    document.getElementById('contact-email').value = '';
-    document.getElementById('contact-message').value = '';
+    document.getElementById('contact-form').reset();
 }
 
-// Event listeners for page navigation
+// Event listeners for page navigation and actions
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up event listeners for navigation
     document.getElementById('proceed-button').addEventListener('click', () => goToPage('login-page'));
-    
-    // Login page
     document.querySelector('#login-form button').addEventListener('click', login);
-    document.querySelector('#login-form a').addEventListener('click', () => goToPage('signup-page'));
-    
-    // Signup page
     document.querySelector('#signup-form button').addEventListener('click', signup);
-    document.querySelector('#signup-form a').addEventListener('click', () => goToPage('login-page'));
-    
-    // Questionnaire page
-    document.querySelector('#questionnaire-form button:first-of-type').addEventListener('click', calculateStressLevel);
-    
-    // Analysis page
-    document.querySelector('#analysis-page button').addEventListener('click', showCopingStrategies);
-    
-    // Management tips page
-    document.querySelector('.consultation-btn').addEventListener('click', () => goToPage('consultation-page'));
-    
-    // Contact form
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.querySelector('.stress-trend-card').addEventListener('click', () => {
+        loadStressReports();
+        goToPage('reports-page');
+    });
+    document.querySelector('#questionnaire-form .btn-primary').addEventListener('click', calculateStressLevel);
+    document.querySelector('#analysis-page button').addEventListener('click', () => showCopingStrategies());
+    document.querySelector('#management-tips-page .consultation-btn').addEventListener('click', () => goToPage('consultation-page'));
     document.querySelector('#contact-form button').addEventListener('click', submitContactForm);
-    
-    // Make the stress trend card clickable to navigate to reports page
-    const stressTrendCard = document.querySelector('.grid-container div:nth-child(2)');
-    if (stressTrendCard) {
-        stressTrendCard.style.cursor = 'pointer';
-        stressTrendCard.addEventListener('click', () => {
-            loadStressReports();
-            goToPage('reports-page');
-        });
-    }
 });
