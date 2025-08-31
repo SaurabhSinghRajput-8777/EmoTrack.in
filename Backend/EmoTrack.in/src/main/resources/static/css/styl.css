@@ -725,10 +725,11 @@ body::after {
     background-clip: text;
 }
 
-/* Welcome page specific larger title */
+/* Welcome page optimized for no scrollbar - COMPACT VERSION */
 #welcome-page .page-title {
-    font-size: 3.5rem;
-    margin-bottom: 2rem;
+    font-size: 2.8rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.1;
 }
 
 .page-intro {
@@ -745,19 +746,20 @@ body::after {
     box-shadow: var(--shadow-md);
 }
 
-/* Welcome page specific larger intro */
+/* Welcome page specific optimized intro */
 #welcome-page .page-intro {
-    font-size: 1.25rem;
-    max-width: 700px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 3rem;
+    font-size: 1.1rem;
+    max-width: 600px;
+    padding: 1.2rem 1.8rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
 }
 
 /* Welcome page buttons */
 #welcome-page .btn {
-    font-size: 1.125rem;
-    padding: 1rem 2.5rem;
-    max-width: 350px;
+    font-size: 1rem;
+    padding: 0.9rem 2rem;
+    max-width: 300px;
 }
 
 
@@ -1400,6 +1402,23 @@ body::after {
 @media (max-width: 480px) {
     .page-title, .quiz-title {
         font-size: 1.75rem;
+    }
+    
+    /* Mobile optimization for welcome page */
+    #welcome-page .page-title {
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    #welcome-page .page-intro {
+        font-size: 1rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    #welcome-page .btn {
+        font-size: 0.95rem;
+        padding: 0.8rem 1.8rem;
     }
     
     .question-title {

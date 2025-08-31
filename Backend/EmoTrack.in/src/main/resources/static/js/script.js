@@ -134,6 +134,10 @@ async function login() {
 async function updateLastCheckedTime() {
     if (!currentUser || !authToken) return;
     
+    // Reset to default values first (important for new users)
+    document.getElementById('last-checked').innerText = 'Never';
+    document.getElementById('current-stress').innerText = '--';
+    
     try {
         const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`, {
             headers: getAuthHeaders()
@@ -146,9 +150,11 @@ async function updateLastCheckedTime() {
                 document.getElementById('last-checked').innerText = new Date(lastReport.assessmentDate).toLocaleString();
                 document.getElementById('current-stress').innerText = lastReport.stressLevel;
             }
+            // If reports.length is 0, the default values set above will remain
         }
     } catch (error) {
         console.error("Error fetching last checked time:", error);
+        // Keep default values on error
     }
 }
 
@@ -169,6 +175,11 @@ function logout() {
     // Hide logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.classList.add('hidden');
+    
+    // Clear dashboard data to prevent data leakage between users
+    document.getElementById('last-checked').innerText = 'Never';
+    document.getElementById('current-stress').innerText = '--';
+    document.getElementById('user-name').innerText = '';
     
     // Clear login form credentials
     const usernameField = document.getElementById('username');
