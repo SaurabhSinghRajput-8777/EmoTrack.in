@@ -2,7 +2,7 @@ package com.emotrack.stressanalyzer.service;
 
 import com.emotrack.stressanalyzer.model.User;
 import com.emotrack.stressanalyzer.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,8 +10,13 @@ import java.util.List;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public User registerUser(User user) {
         // Check if username already exists
@@ -19,7 +24,9 @@ public class UserService {
             throw new RuntimeException("Username already exists");
         }
         
-        // Additional validation can be added here
+        // Encrypt password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
         return userRepository.save(user);
     }
 
@@ -30,7 +37,8 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
         
-        if (!user.getPassword().equals(password)) {
+        // Use password encoder to verify password
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
         

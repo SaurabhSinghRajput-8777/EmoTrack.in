@@ -1,8 +1,22 @@
 // API Base URL - Change this to match your Spring Boot server
 const API_BASE_URL = "http://localhost:8080/api";
 
-// Current logged in user data
+// Current logged in user data and token
 let currentUser = null;
+let authToken = null;
+
+// Quiz state management
+let quizAnswers = {};
+let currentQuestionIndex = 0;
+const totalQuestions = 7;
+
+// Helper function to get authentication headers
+function getAuthHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': authToken ? `Bearer ${authToken}` : ''
+    };
+}
 
 // Function to reset the questionnaire form
 function resetQuestionnaireForm() {
@@ -95,8 +109,15 @@ async function login() {
         });
 
         if (response.ok) {
-            currentUser = await response.json();
+            const loginResponse = await response.json();
+            authToken = loginResponse.token;
+            currentUser = loginResponse.user;
             document.getElementById('user-name').innerText = currentUser.name || currentUser.username;
+            
+            // Show logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            
             goToPage('main-page');
             updateLastCheckedTime();
         } else {
@@ -111,10 +132,12 @@ async function login() {
 
 // Function to update the last checked time on the dashboard
 async function updateLastCheckedTime() {
-    if (!currentUser) return;
+    if (!currentUser || !authToken) return;
     
     try {
-        const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`);
+        const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const reports = await response.json();
             if (reports.length > 0) {
@@ -129,9 +152,38 @@ async function updateLastCheckedTime() {
     }
 }
 
+// Function to handle logo click - only allow navigation when logged in
+function handleLogoClick() {
+    // Only allow navigation to main-page if user is logged in
+    if (currentUser && authToken) {
+        goToPage('main-page');
+    }
+    // If not logged in, do nothing (no navigation)
+}
+
 // Function to handle logout
 function logout() {
     currentUser = null;
+    authToken = null;
+    
+    // Hide logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.classList.add('hidden');
+    
+    // Clear login form credentials
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    if (usernameField) usernameField.value = '';
+    if (passwordField) passwordField.value = '';
+    
+    // Also clear signup form if it exists
+    const signupFields = ['new-username', 'email', 'new-password', 'name', 'age'];
+    signupFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+    });
+    
     goToPage('login-page');
 }
 
@@ -165,7 +217,7 @@ function calculateStressLevel() {
 
 // Function to save stress assessment to the backend
 async function saveStressAssessment(totalStressScore, stressLevel) {
-    if (!currentUser) return;
+    if (!currentUser || !authToken) return;
 
     const assessment = {
         userId: currentUser.id,
@@ -176,7 +228,7 @@ async function saveStressAssessment(totalStressScore, stressLevel) {
     try {
         const response = await fetch(`${API_BASE_URL}/stress-assessment`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(assessment)
         });
         if (response.ok) {
@@ -214,10 +266,12 @@ function showCopingStrategiesForReport(stressLevel) {
 
 // Function to load and display stress reports
 async function loadStressReports() {
-    if (!currentUser) return;
+    if (!currentUser || !authToken) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`);
+        const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const reports = await response.json();
             displayStressReports(reports);
@@ -226,6 +280,26 @@ async function loadStressReports() {
         }
     } catch (error) {
         console.error("Error loading stress reports:", error);
+    }
+}
+
+// Function to load and display stress analytics
+async function loadStressAnalytics() {
+    if (!currentUser || !authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/stress-analytics/${currentUser.id}`, {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            const analytics = await response.json();
+            displayStressAnalytics(analytics);
+            goToPage('analytics-page');
+        } else {
+            console.error("Failed to load stress analytics:", await response.text());
+        }
+    } catch (error) {
+        console.error("Error loading stress analytics:", error);
     }
 }
 
@@ -263,6 +337,343 @@ function displayStressReports(reports) {
     reportsContent.insertBefore(reportsList, backButton);
 }
 
+// Function to display analytics data
+function displayStressAnalytics(analytics) {
+    if (analytics.message) {
+        document.getElementById('analytics-content').innerHTML = `
+            <div class="no-data-message">
+                <h3>No Data Available</h3>
+                <p>${analytics.message}</p>
+                <button onclick="goToPage('questionnaire-page')" class="btn btn-primary">Take Your First Assessment</button>
+            </div>`;
+        return;
+    }
+
+    // Update summary stats
+    document.getElementById('total-assessments').textContent = analytics.totalAssessments;
+    document.getElementById('average-score').textContent = analytics.averageStressScore;
+    
+    // Determine trend
+    const latestAssessment = analytics.latestAssessment;
+    const monthlyComparison = analytics.monthlyComparison;
+    let trendText = "Stable";
+    if (monthlyComparison.improvement > 0) {
+        trendText = "↗️ Improving";
+    } else if (monthlyComparison.improvement < 0) {
+        trendText = "↘️ Needs Attention";
+    }
+    document.getElementById('current-trend').textContent = trendText;
+
+    // Display insights
+    const insightsList = document.getElementById('insights-list');
+    insightsList.innerHTML = '';
+    analytics.insights.forEach(insight => {
+        const insightItem = document.createElement('div');
+        insightItem.className = 'insight-item';
+        insightItem.innerHTML = `<i class="fas fa-lightbulb"></i> <span>${insight}</span>`;
+        insightsList.appendChild(insightItem);
+    });
+
+    // Display monthly comparison
+    const monthlyStats = document.getElementById('monthly-stats');
+    const improvementClass = monthlyComparison.improvement >= 0 ? 'improvement' : 'decline';
+    monthlyStats.innerHTML = `
+        <div class="monthly-comparison-grid">
+            <div class="comparison-card">
+                <h4>This Month</h4>
+                <div class="stat-large">${monthlyComparison.currentMonthAverage}</div>
+            </div>
+            <div class="comparison-card">
+                <h4>Last Month</h4>
+                <div class="stat-large">${monthlyComparison.previousMonthAverage}</div>
+            </div>
+            <div class="comparison-card ${improvementClass}">
+                <h4>Change</h4>
+                <div class="stat-large">${monthlyComparison.improvement >= 0 ? '+' : ''}${monthlyComparison.improvement}</div>
+                <small>${monthlyComparison.improvementPercentage >= 0 ? '+' : ''}${monthlyComparison.improvementPercentage}%</small>
+            </div>
+        </div>`;
+
+    // Draw charts
+    drawDistributionChart(analytics.stressLevelDistribution);
+    drawTrendChart(analytics.weeklyTrend);
+}
+
+// Simple chart drawing functions using Canvas
+function drawDistributionChart(distribution) {
+    const canvas = document.getElementById('distribution-chart');
+    const ctx = canvas.getContext('2d');
+    const colors = { Low: '#4cd681', Moderate: '#ffa500', High: '#ff6b6b' };
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!distribution || Object.keys(distribution).length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const total = Object.values(distribution).reduce((sum, count) => sum + count, 0);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+    
+    let startAngle = 0;
+    
+    // Draw pie chart
+    Object.entries(distribution).forEach(([level, count]) => {
+        const sliceAngle = (count / total) * 2 * Math.PI;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[level] || '#ccc';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw labels
+        const labelAngle = startAngle + sliceAngle / 2;
+        const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+        const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${level} (${count})`, labelX, labelY);
+        
+        startAngle += sliceAngle;
+    });
+}
+
+function drawTrendChart(weeklyTrend) {
+    const canvas = document.getElementById('trend-chart');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!weeklyTrend || !weeklyTrend.labels || weeklyTrend.labels.length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText('No trend data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const margin = 40;
+    const chartWidth = canvas.width - 2 * margin;
+    const chartHeight = canvas.height - 2 * margin;
+    const maxScore = 21; // Maximum possible score
+    
+    // Draw axes
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin, margin);
+    ctx.lineTo(margin, canvas.height - margin);
+    ctx.lineTo(canvas.width - margin, canvas.height - margin);
+    ctx.stroke();
+    
+    // Draw data points and lines
+    if (weeklyTrend.scores.length > 1) {
+        ctx.strokeStyle = '#00a264';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        weeklyTrend.scores.forEach((score, index) => {
+            const x = margin + (index / (weeklyTrend.scores.length - 1)) * chartWidth;
+            const y = canvas.height - margin - (score / maxScore) * chartHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            
+            // Draw data points
+            ctx.fillStyle = '#004d2f';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        ctx.stroke();
+    }
+    
+    // Draw labels
+    ctx.fillStyle = '#666';
+    ctx.font = '10px Roboto';
+    ctx.textAlign = 'center';
+    
+    weeklyTrend.labels.forEach((label, index) => {
+        const x = margin + (index / Math.max(1, weeklyTrend.labels.length - 1)) * chartWidth;
+        ctx.fillText(label.substring(0, 8), x, canvas.height - 10);
+    });
+}
+
+// ===== NEW QUIZ SYSTEM FUNCTIONS =====
+
+// Function to start the quiz
+function startQuiz() {
+    // Reset quiz state
+    quizAnswers = {};
+    currentQuestionIndex = 0;
+    
+    // Clear any previous selections
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Go to first question
+    goToPage('question-1');
+}
+
+// Function to handle answer selection
+function selectAnswer(questionId, value) {
+    // Store the answer
+    quizAnswers[questionId] = value;
+    
+    // Get current question number
+    const questionNum = parseInt(questionId.substring(1));
+    
+    // Visual feedback - mark selected option
+    const currentQuestionPage = document.getElementById(`question-${questionNum}`);
+    const options = currentQuestionPage.querySelectorAll('.option-card');
+    options.forEach(option => option.classList.remove('selected'));
+    
+    // Find and mark the selected option (safely parse the answer value)
+    const selectedOption = Array.from(options).find(option => {
+        const matches = option.getAttribute('onclick').match(/(\d+)/g);
+        if (!matches || matches.length === 0) return false;
+        const optionValue = parseInt(matches[matches.length - 1], 10);
+        return optionValue === value;
+    });
+    
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Enable submit button on last question if answered
+    if (questionNum === totalQuestions) {
+        const submitBtn = document.getElementById('submit-btn');
+        if (Object.keys(quizAnswers).length === totalQuestions) {
+            submitBtn.disabled = false;
+        }
+    }
+    
+    // Auto-advance to next question after a short delay (except for last question)
+    if (questionNum < totalQuestions) {
+        setTimeout(() => {
+            goToNextQuestion(questionNum);
+        }, 800); // 800ms delay for user to see their selection
+    }
+}
+
+// Function to go to next question
+function goToNextQuestion(currentQuestionNum) {
+    if (currentQuestionNum < totalQuestions) {
+        goToPage(`question-${currentQuestionNum + 1}`);
+        currentQuestionIndex = currentQuestionNum;
+        
+        // Restore previous selection if exists
+        const nextQuestionId = `q${currentQuestionNum + 1}`;
+        if (quizAnswers[nextQuestionId]) {
+            setTimeout(() => {
+                restoreSelection(currentQuestionNum + 1, quizAnswers[nextQuestionId]);
+            }, 100);
+        }
+    }
+}
+
+// Function to go to previous question
+function goToPreviousQuestion(currentQuestionNum) {
+    if (currentQuestionNum > 1) {
+        goToPage(`question-${currentQuestionNum - 1}`);
+        currentQuestionIndex = currentQuestionNum - 2;
+        
+        // Restore previous selection if exists
+        const prevQuestionId = `q${currentQuestionNum - 1}`;
+        if (quizAnswers[prevQuestionId]) {
+            setTimeout(() => {
+                restoreSelection(currentQuestionNum - 1, quizAnswers[prevQuestionId]);
+            }, 100);
+        }
+    }
+}
+
+// Function to restore visual selection on question page
+function restoreSelection(questionNum, value) {
+    const questionPage = document.getElementById(`question-${questionNum}`);
+    if (!questionPage) return;
+    
+    const options = questionPage.querySelectorAll('.option-card');
+    options.forEach(option => {
+        option.classList.remove('selected');
+        const matches = option.getAttribute('onclick').match(/(\d+)/g);
+        if (!matches || matches.length === 0) return;
+        const optionValue = parseInt(matches[matches.length - 1], 10);
+        if (optionValue === value) {
+            option.classList.add('selected');
+        }
+    });
+}
+
+// Function to submit the quiz
+function submitQuiz() {
+    // Check if all questions are answered
+    if (Object.keys(quizAnswers).length < totalQuestions) {
+        alert('Please answer all questions before submitting.');
+        return;
+    }
+    
+    // Calculate stress score
+    let totalStressScore = 0;
+    for (let i = 1; i <= totalQuestions; i++) {
+        totalStressScore += quizAnswers[`q${i}`] || 0;
+    }
+    
+    // Determine stress level
+    let level;
+    if (totalStressScore <= 7) level = "Low";
+    else if (totalStressScore <= 14) level = "Moderate";
+    else level = "High";
+    
+    // Save assessment
+    saveStressAssessment(totalStressScore, level);
+    
+    // Show results
+    document.getElementById('stress-level').innerText = level;
+    const stressBar = document.getElementById('stress-bar');
+    stressBar.className = 'progress-bar';
+    stressBar.classList.add(level.toLowerCase());
+    stressBar.querySelector('.progress-fill').style.width = `${(totalStressScore / 21) * 100}%`;
+    
+    goToPage('analysis-page');
+}
+
+// Function to reset quiz when starting questionnaire page
+function resetQuiz() {
+    quizAnswers = {};
+    currentQuestionIndex = 0;
+    
+    // Reset submit button
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+    }
+    
+    // Clear all selections
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+}
+
 // Function to submit the contact form
 function submitContactForm() {
     const name = document.getElementById('contact-name').value;
@@ -279,16 +690,65 @@ function submitContactForm() {
 
 // Event listeners for page navigation and actions
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('proceed-button').addEventListener('click', () => goToPage('login-page'));
-    document.querySelector('#login-form button').addEventListener('click', login);
-    document.querySelector('#signup-form button').addEventListener('click', signup);
-    document.getElementById('logout-btn').addEventListener('click', logout);
-    document.querySelector('.stress-trend-card').addEventListener('click', () => {
-        loadStressReports();
-        goToPage('reports-page');
-    });
-    document.querySelector('#questionnaire-form .btn-primary').addEventListener('click', calculateStressLevel);
-    document.querySelector('#analysis-page button').addEventListener('click', () => showCopingStrategies());
-    document.querySelector('#management-tips-page .consultation-btn').addEventListener('click', () => goToPage('consultation-page'));
-    document.querySelector('#contact-form button').addEventListener('click', submitContactForm);
+    // Basic navigation
+    const proceedBtn = document.getElementById('proceed-button');
+    if (proceedBtn) proceedBtn.addEventListener('click', () => goToPage('login-page'));
+    
+    // Auth forms
+    const loginBtn = document.querySelector('#login-form button');
+    if (loginBtn) loginBtn.addEventListener('click', login);
+    
+    const signupBtn = document.querySelector('#signup-form button');
+    if (signupBtn) signupBtn.addEventListener('click', signup);
+    
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    
+    // Dashboard cards
+    const trendCard = document.querySelector('.stress-trend-card');
+    if (trendCard) {
+        trendCard.addEventListener('click', () => {
+            loadStressReports();
+            goToPage('reports-page');
+        });
+    }
+    
+    const analyticsCard = document.querySelector('.analytics-card');
+    if (analyticsCard) {
+        analyticsCard.addEventListener('click', loadStressAnalytics);
+    }
+    
+    // Analysis page - coping strategies button (already fixed in HTML)
+    
+    // Consultation button
+    const consultationBtn = document.querySelector('#management-tips-page .consultation-btn');
+    if (consultationBtn) {
+        consultationBtn.addEventListener('click', () => goToPage('consultation-page'));
+    }
+    
+    // Contact form
+    const contactBtn = document.querySelector('#contact-form button');
+    if (contactBtn) contactBtn.addEventListener('click', submitContactForm);
+    
+    // Handle Enter key for forms
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                login();
+            }
+        });
+    }
+    
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+        signupForm.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                signup();
+            }
+        });
+    }
 });
