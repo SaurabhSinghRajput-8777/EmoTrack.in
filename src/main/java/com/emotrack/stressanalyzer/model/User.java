@@ -15,7 +15,8 @@ public class User {
 
     @Column(unique = true)
     private String username;
-    @Column(unique = true)   private String email;
+    @Column(unique = true)   
+    private String email;
     private String password;  // Now encrypted with BCrypt
     private String name;
     private int age;
