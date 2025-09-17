@@ -2,18 +2,18 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy pom.xml and source code from subdirectory
-COPY Backend/EmoTrack.in/pom.xml .
-COPY Backend/EmoTrack.in/src ./src
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN chmod +x mvnw
 
-# Build the application (skip tests for faster builds)
-RUN mvn -B clean package -DskipTests
+COPY . .
+RUN ./mvnw -B clean package -DskipTests
 
 # ---------- Run Stage ----------
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 
-# Copy the built jar from the build stage
+# Copy jar built in build stage
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
