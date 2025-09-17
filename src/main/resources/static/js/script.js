@@ -1,5 +1,5 @@
 // API Base URL - Change this to match your Spring Boot server
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://emotrackin-production.up.railway.app/";
 
 // Current logged in user data and token
 let currentUser = null;
