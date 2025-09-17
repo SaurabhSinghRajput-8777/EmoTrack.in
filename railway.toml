@@ -1,1 +1,6 @@
-[build]\n  builder = \"dockerfile\"\n\n[deploy]\n  startCommand = \"java -jar target/stress-analyzer-0.0.1-SNAPSHOT.jar\"\n
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "java -jar target/stress-analyzer-0.0.1-SNAPSHOT.jar"
+
