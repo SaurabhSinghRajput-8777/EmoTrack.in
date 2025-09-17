@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Allow requests from any origin for development
 public class EmoTrackController {
 
     private final UserService userService;
