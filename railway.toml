@@ -2,5 +2,5 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = \"java -jar app.jar\"
+startCommand = "java -jar app.jar"
 
