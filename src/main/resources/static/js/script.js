@@ -1,5 +1,5 @@
 // API Base URL - Change this to match your Spring Boot server
-const API_BASE_URL = "https://emotrackin-production.up.railway.app/";
+const API_BASE_URL = "https://emotrackin-production.up.railway.app/api";
 
 // Current logged in user data and token
 let currentUser = null;
