@@ -10,6 +10,9 @@ let quizAnswers = {};
 let currentQuestionIndex = 0;
 const totalQuestions = 7;
 
+// Current page tracking for browser history
+let currentPage = 'welcome-page';
+
 // Helper function to get authentication headers
 function getAuthHeaders() {
     return {
@@ -18,16 +21,55 @@ function getAuthHeaders() {
     };
 }
 
-// Function to reset the questionnaire form
-function resetQuestionnaireForm() {
-    const answers = document.querySelectorAll('#questionnaire-form input[type="radio"]');
-    answers.forEach(answer => {
-        answer.checked = false; // Uncheck all radio buttons
-    });
+// Function to get page title for browser history
+function getPageTitle(pageId) {
+    const pageTitles = {
+        'welcome-page': 'Welcome - EmoTrack.in',
+        'login-page': 'Login - EmoTrack.in',
+        'signup-page': 'Sign Up - EmoTrack.in',
+        'main-page': 'Dashboard - EmoTrack.in',
+        'questionnaire-page': 'Stress Assessment - EmoTrack.in',
+        'analysis-page': 'Results - EmoTrack.in',
+        'reports-page': 'Reports - EmoTrack.in',
+        'analytics-page': 'Analytics - EmoTrack.in',
+        'management-tips-page': 'Coping Strategies - EmoTrack.in',
+        'consultation-page': 'Consultation - EmoTrack.in',
+        'question-1': 'Question 1 - EmoTrack.in',
+        'question-2': 'Question 2 - EmoTrack.in',
+        'question-3': 'Question 3 - EmoTrack.in',
+        'question-4': 'Question 4 - EmoTrack.in',
+        'question-5': 'Question 5 - EmoTrack.in',
+        'question-6': 'Question 6 - EmoTrack.in',
+        'question-7': 'Question 7 - EmoTrack.in'
+    };
+    return pageTitles[pageId] || 'EmoTrack.in';
 }
 
-// Function to navigate between pages
-function goToPage(pageId) {
+// Function to check if user can access a page
+function canAccessPage(pageId) {
+    const authRequiredPages = ['main-page', 'reports-page', 'analytics-page', 'management-tips-page', 'consultation-page'];
+    const questionPages = ['question-1', 'question-2', 'question-3', 'question-4', 'question-5', 'question-6', 'question-7'];
+    
+    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
+        return currentUser && authToken;
+    }
+    return true;
+}
+
+// Function to navigate between pages with history support
+function goToPage(pageId, addToHistory = true) {
+    // Don't navigate to the same page
+    if (currentPage === pageId) return;
+
+    // Check if user can access this page
+    if (!canAccessPage(pageId)) {
+        goToPage('login-page', true);
+        return;
+    }
+
+    // Store previous page
+    const previousPage = currentPage;
+
     // Hide all pages
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => {
@@ -40,12 +82,95 @@ function goToPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
         targetPage.classList.remove('hidden');
+        currentPage = pageId;
+        
+        // Update page title
+        document.title = getPageTitle(pageId);
+    }
+
+    // Add to browser history (unless we're handling a back/forward event)
+    if (addToHistory && window.history) {
+        const state = { page: pageId, timestamp: Date.now() };
+        const title = getPageTitle(pageId);
+        const url = pageId === 'welcome-page' ? '/' : `#${pageId}`;
+        window.history.pushState(state, title, url);
+    }
+
+    // Handle page-specific logic
+    handlePageNavigation(pageId, previousPage);
+}
+
+// Function to handle page-specific navigation logic
+function handlePageNavigation(pageId, previousPage) {
+    // Show/hide logout button based on authentication state
+    const logoutBtn = document.getElementById('logout-btn');
+    const authRequiredPages = ['main-page', 'reports-page', 'analytics-page', 'management-tips-page', 'consultation-page'];
+    const questionPages = ['question-1', 'question-2', 'question-3', 'question-4', 'question-5', 'question-6', 'question-7'];
+    
+    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
+        if (logoutBtn && currentUser && authToken) {
+            logoutBtn.classList.remove('hidden');
+        }
+    } else {
+        if (logoutBtn && !currentUser) {
+            logoutBtn.classList.add('hidden');
+        }
     }
 
     // Reset questionnaire form if navigating to that page
     if (pageId === 'questionnaire-page') {
         resetQuestionnaireForm();
     }
+
+    // Handle question navigation for quiz system
+    if (pageId.startsWith('question-')) {
+        const questionNum = parseInt(pageId.split('-')[1]);
+        currentQuestionIndex = questionNum - 1;
+        
+        // Restore previous selection if exists
+        const questionId = `q${questionNum}`;
+        if (quizAnswers[questionId]) {
+            setTimeout(() => {
+                restoreSelection(questionNum, quizAnswers[questionId]);
+            }, 100);
+        }
+    }
+}
+
+// Handle browser back/forward buttons
+function handlePopState(event) {
+    if (event.state && event.state.page) {
+        goToPage(event.state.page, false); // false = don't add to history again
+    } else {
+        // Handle direct URL access or refresh
+        const hash = window.location.hash.slice(1);
+        const pageId = hash || 'welcome-page';
+        if (canAccessPage(pageId)) {
+            goToPage(pageId, false);
+        } else {
+            goToPage('welcome-page', false);
+        }
+    }
+}
+
+// Function to initialize page from URL
+function initializePageFromURL() {
+    const hash = window.location.hash.slice(1);
+    const pageId = hash || 'welcome-page';
+    
+    if (canAccessPage(pageId)) {
+        goToPage(pageId, false);
+    } else {
+        goToPage('welcome-page', false);
+    }
+}
+
+// Function to reset the questionnaire form
+function resetQuestionnaireForm() {
+    const answers = document.querySelectorAll('#questionnaire-form input[type="radio"]');
+    answers.forEach(answer => {
+        answer.checked = false; // Uncheck all radio buttons
+    });
 }
 
 // Function to handle user signup
@@ -701,6 +826,12 @@ function submitContactForm() {
 
 // Event listeners for page navigation and actions
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize browser history support
+    window.addEventListener('popstate', handlePopState);
+    
+    // Initialize page from URL
+    initializePageFromURL();
+    
     // Basic navigation
     const proceedBtn = document.getElementById('proceed-button');
     if (proceedBtn) proceedBtn.addEventListener('click', () => goToPage('login-page'));
