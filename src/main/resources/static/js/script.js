@@ -266,19 +266,57 @@ async function loadStressReports() {
     } catch(e){ console.error("Load reports error",e); }
 }
 function displayStressReports(reports) {
-    const container=document.getElementById('reports-container'); if(!container) return;
-    container.innerHTML=""; if(!reports||reports.length===0){container.innerHTML="<p>No reports available.</p>";return;}
-    reports.sort((a,b)=>new Date(b.assessmentDate)-new Date(a.assessmentDate));
-    reports.forEach(r=>{ const card=document.createElement('div'); card.className="report-card";
-        card.innerHTML=`<h3>${new Date(r.assessmentDate).toLocaleString()}</h3><p><strong>Level:</strong> ${r.stressLevel}</p><p><strong>Score:</strong> ${r.totalStressScore}/21</p>`; 
-        container.appendChild(card); });
+    const container = document.getElementById('reports-container');
+    if (!container) return;
+
+    // Use the .reports-list class for the container as styled in CSS
+    container.className = 'reports-list';
+    container.innerHTML = "";
+
+    if (!reports || reports.length === 0) {
+        // The CSS will handle the 'empty' message automatically, so this is just a fallback.
+        return; 
+    }
+
+    reports.sort((a, b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
+
+    reports.forEach(report => {
+        const card = document.createElement('div');
+        const stressClass = report.stressLevel.toLowerCase() + '-stress'; // Creates 'low-stress', 'moderate-stress', etc.
+        
+        // Add both base class and dynamic stress level class
+        card.className = `report-card ${stressClass}`;
+
+        // Generate the full HTML structure that matches the CSS
+        card.innerHTML = `
+            <div class="report-header">
+                <div class="report-date">${new Date(report.assessmentDate).toLocaleString()}</div>
+                <div class="report-level">${report.stressLevel}</div>
+            </div>
+            <div class="report-body">
+                <p>Your assessment score was <strong>${report.totalStressScore} out of 21</strong>, indicating a ${report.stressLevel.toLowerCase()} level of stress.</p>
+            </div>
+            <div class="report-footer">
+                <button class="btn btn-secondary" style="margin: 0;" onclick="showCopingStrategies('${report.stressLevel}')">View Tips</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
 }
 async function loadStressAnalytics() {
-    if(!currentUser||!authToken) return;
+    if (!currentUser || !authToken) return;
+    
+    goToPage('analytics-page');
+
     try {
-        const res=await fetch(`${API_BASE_URL}/stress-analytics/${currentUser.id}`,{headers:getAuthHeaders()});
-        if(res.ok){ const data=await res.json(); displayStressAnalytics(data); }
-    } catch(e){ console.error("Load analytics error",e); }
+        const res = await fetch(`${API_BASE_URL}/stress-analytics/${currentUser.id}`, { headers: getAuthHeaders() });
+        if (res.ok) {
+            const data = await res.json();
+            displayStressAnalytics(data);
+        }
+    } catch (e) {
+        console.error("Load analytics error", e);
+    }
 }
 function displayStressAnalytics(data) {
     if(!data){alert("No analytics");return;}
