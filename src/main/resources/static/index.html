@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>EmoTrack.in - Stress Monitoring & Management</title>
     <link rel="stylesheet" href="css/styl.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -10,69 +10,69 @@
 </head>
 <body>
 
-    <main id="app-container">
-        <header class="app-header">
-            <h1 class="logo-title" onclick="handleLogoClick()">
-                <span class="logo-em">Emo</span><span class="logo-track">Track.in</span>
-            </h1>
-            <button id="logout-btn" class="btn btn-danger hidden">Logout</button>
-        </header>
+<main id="app-container">
+    <header class="app-header">
+        <h1 class="logo-title" onclick="handleLogoClick()">
+            <span class="logo-em">Emo</span><span class="logo-track">Track.in</span>
+        </h1>
+        <button id="logout-btn" class="btn btn-danger hidden">Logout</button>
+    </header>
 
-        <section id="welcome-page" class="page">
-            <div class="page-content text-center">
-                <img src="./images/EmoTrack Logo.jpg" alt="EmoTrack.in Logo" class="welcome-logo">
-                <h2 class="page-title">Welcome to EmoTrack.in</h2>
-                <p class="page-intro">
-                    EmoTrack is an innovative stress management tool designed to help you monitor, understand, and manage your stress levels.
+    <section id="welcome-page" class="page">
+        <div class="page-content text-center">
+            <img src="./images/EmoTrack Logo.jpg" alt="EmoTrack.in Logo" class="welcome-logo">
+            <h2 class="page-title">Welcome to EmoTrack.in</h2>
+            <p class="page-intro">
+                EmoTrack is an innovative stress management tool designed to help you monitor, understand, and manage your stress levels.
+            </p>
+            <button id="proceed-button" class="btn btn-primary">Proceed</button>
+        </div>
+    </section>
+
+    <section id="login-page" class="page hidden">
+        <div class="page-content auth-form-container">
+            <h2 class="page-title">Login</h2>
+            <form id="login-form">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Username" required class="form-input">
+
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Password" required class="form-input">
+
+                <button type="button" id="login-btn" class="btn btn-primary">Login</button>
+                <p class="auth-switch">Don't have an account?
+                    <a href="#signup-page" onclick="goToPage('signup-page')">Sign up here</a>
                 </p>
-                <button id="proceed-button" class="btn btn-primary">Proceed</button>
-            </div>
-        </section>
+            </form>
+        </div>
+    </section>
 
-        <section id="login-page" class="page hidden">
-            <div class="page-content auth-form-container">
-                <h2 class="page-title">Login</h2>
-                <form id="login-form">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Username" required class="form-input">
+    <section id="signup-page" class="page hidden">
+        <div class="page-content auth-form-container">
+            <h2 class="page-title">Sign Up</h2>
+            <form id="signup-form">
+                <label for="new-username">Username</label>
+                <input type="text" id="new-username" placeholder="Username" required class="form-input">
 
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Password" required class="form-input">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Email" required class="form-input">
 
-                    <button type="button" class="btn btn-primary">Login</button>
-                    <p class="auth-switch">Don't have an account? 
-                        <a href="#signup-page" onclick="goToPage('signup-page')">Sign up here</a>
-                    </p>
-                </form>
-            </div>
-        </section>
+                <label for="new-password">Password</label>
+                <input type="password" id="new-password" placeholder="Password" required class="form-input">
 
-        <section id="signup-page" class="page hidden">
-            <div class="page-content auth-form-container">
-                <h2 class="page-title">Sign Up</h2>
-                <form id="signup-form">
-                    <label for="new-username">Username</label>
-                    <input type="text" id="new-username" placeholder="Username" required class="form-input">
+                <label for="name">Your Name</label>
+                <input type="text" id="name" placeholder="Your Name" required class="form-input">
 
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Email" required class="form-input">
+                <label for="age">Your Age</label>
+                <input type="number" id="age" placeholder="Your Age" required min="18" max="100" class="form-input">
 
-                    <label for="new-password">Password</label>
-                    <input type="password" id="new-password" placeholder="Password" required class="form-input">
-
-                    <label for="name">Your Name</label>
-                    <input type="text" id="name" placeholder="Your Name" required class="form-input">
-
-                    <label for="age">Your Age</label>
-                    <input type="number" id="age" placeholder="Your Age" required min="18" max="100" class="form-input">
-
-                    <button type="button" class="btn btn-primary">Sign Up</button>
-                    <p class="auth-switch">Already have an account? 
-                        <a href="#login-page" onclick="goToPage('login-page')">Login here</a>
-                    </p>
-                </form>
-            </div>
-        </section>
+                <button type="button" id="signup-btn" class="btn btn-primary">Sign Up</button>
+                <p class="auth-switch">Already have an account?
+                    <a href="#login-page" onclick="goToPage('login-page')">Login here</a>
+                </p>
+            </form>
+        </div>
+    </section>
 
         <section id="main-page" class="page hidden">
             <div class="page-content">

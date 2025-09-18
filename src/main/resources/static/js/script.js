@@ -1,16 +1,17 @@
-// API Base URL - Change this to match your Spring Boot server
-// --- FIXED script.js ---
 
 const API_BASE_URL = "https://emotrackin-production.up.railway.app/api";
 
 let currentUser = null;
 let authToken = null;
+
 let quizAnswers = {};
 let currentQuestionIndex = 0;
 const totalQuestions = 7;
+
 let currentPage = 'welcome-page';
 let isNavigating = false;
 
+// Helpers
 function getAuthHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -43,61 +44,253 @@ function getPageTitle(pageId) {
 
 function canAccessPage(pageId) {
     const authRequiredPages = ['main-page', 'reports-page', 'analytics-page', 'management-tips-page', 'consultation-page'];
-    const questionPages = ['question-1', 'question-2', 'question-3', 'question-4', 'question-5', 'question-6', 'question-7'];
-    return !(authRequiredPages.includes(pageId) || questionPages.includes(pageId)) || (currentUser && authToken);
+    const questionPages = ['question-1','question-2','question-3','question-4','question-5','question-6','question-7'];
+    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
+        return !!(currentUser && authToken);
+    }
+    return true;
 }
 
+// Navigation
 function goToPage(pageId, addToHistory = true) {
     if (currentPage === pageId) return;
 
+    // Access guard
     if (!canAccessPage(pageId)) {
         if (!isNavigating) {
+            // redirect to login if not already handling navigation
             goToPage('login-page', true);
         }
-        return;
+        return; // always stop further execution when page is blocked
     }
 
     const previousPage = currentPage;
-    document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-    const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.classList.remove('hidden');
+
+    // hide all pages
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+
+    // show target
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.classList.remove('hidden');
         currentPage = pageId;
         document.title = getPageTitle(pageId);
     }
 
+    // history state
     if (addToHistory && window.history) {
         const state = { page: pageId, timestamp: Date.now() };
         const title = getPageTitle(pageId);
         const url = pageId === 'welcome-page' ? '/' : `#${pageId}`;
-        window.history.pushState(state, title, url);
+        try {
+            window.history.pushState(state, title, url);
+        } catch (e) {
+            // some browsers might throw for pushState in file:// — ignore
+        }
     }
 
+    // page-specific logic
     handlePageNavigation(pageId, previousPage);
 }
 
-function handleLogoClick() {
-    if (currentUser && authToken) {
-        goToPage('main-page');
+function handlePageNavigation(pageId, previousPage) {
+    // logout button visibility
+    const logoutBtn = document.getElementById('logout-btn');
+    const authRequiredPages = ['main-page','reports-page','analytics-page','management-tips-page','consultation-page'];
+    const questionPages = ['question-1','question-2','question-3','question-4','question-5','question-6','question-7'];
+
+    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
+        if (logoutBtn && currentUser && authToken) logoutBtn.classList.remove('hidden');
     } else {
-        goToPage('welcome-page');
+        if (logoutBtn) logoutBtn.classList.add('hidden');
+    }
+
+    // reset questionnaire root page
+    if (pageId === 'questionnaire-page') {
+        resetQuestionnaireForm();
+        resetQuiz();
+    }
+
+    // if we're showing a question page, set index and restore selection
+    if (pageId && pageId.startsWith('question-')) {
+        const qn = parseInt(pageId.split('-')[1], 10);
+        currentQuestionIndex = qn - 1;
+        const questionId = `q${qn}`;
+        if (quizAnswers[questionId]) {
+            setTimeout(() => restoreSelection(qn, quizAnswers[questionId]), 100);
+        }
     }
 }
 
-// --- FIX in signup flow ---
+// popstate handling (back/forward)
+function handlePopState(event) {
+    if (event.state && event.state.page) {
+        goToPage(event.state.page, false);
+    } else {
+        const hash = window.location.hash.slice(1);
+        const pageId = hash || 'welcome-page';
+        if (pageId === 'login-page' || pageId === 'signup-page' || pageId === 'welcome-page') {
+            goToPage(pageId, false);
+        } else if (canAccessPage(pageId)) {
+            goToPage(pageId, false);
+        } else {
+            goToPage('welcome-page', false);
+        }
+    }
+}
+
+function initializePageFromURL() {
+    if (isNavigating) return;
+    const hash = window.location.hash.slice(1);
+    const pageId = hash || 'welcome-page';
+
+    if (pageId === 'login-page' || pageId === 'signup-page') {
+        goToPage(pageId, false);
+        return;
+    }
+
+    if (canAccessPage(pageId)) {
+        goToPage(pageId, false);
+    } else {
+        goToPage('welcome-page', false);
+    }
+}
+
+// Questionnaire helpers
+function resetQuestionnaireForm() {
+    const radios = document.querySelectorAll('#questionnaire-form input[type="radio"]');
+    radios.forEach(r => r.checked = false);
+}
+
+function resetQuiz() {
+    quizAnswers = {};
+    currentQuestionIndex = 0;
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) submitBtn.disabled = true;
+    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+}
+
+function startQuiz() {
+    resetQuiz();
+    goToPage('question-1');
+}
+
+function selectAnswer(questionId, value) {
+    // store
+    quizAnswers[questionId] = value;
+
+    const questionNum = parseInt(questionId.substring(1), 10);
+    const currentQuestionPage = document.getElementById(`question-${questionNum}`);
+    if (!currentQuestionPage) return;
+
+    const options = currentQuestionPage.querySelectorAll('.option-card');
+    options.forEach(opt => opt.classList.remove('selected'));
+
+    // find option by onclick value extraction (works with current markup)
+    const selectedOption = Array.from(options).find(option => {
+        const attr = option.getAttribute('onclick') || '';
+        const matches = attr.match(/(\d+)/g);
+        if (!matches || matches.length === 0) return false;
+        const optionValue = parseInt(matches[matches.length - 1], 10);
+        return optionValue === value;
+    });
+
+    if (selectedOption) selectedOption.classList.add('selected');
+
+    // enable submit if all answered
+    if (Object.keys(quizAnswers).length === totalQuestions) {
+        const submitBtn = document.getElementById('submit-btn');
+        if (submitBtn) submitBtn.disabled = false;
+    }
+
+    // auto advance
+    if (questionNum < totalQuestions) {
+        setTimeout(() => goToNextQuestion(questionNum), 600);
+    }
+}
+
+function goToNextQuestion(currentQuestionNum) {
+    if (currentQuestionNum < totalQuestions) {
+        goToPage(`question-${currentQuestionNum + 1}`);
+        currentQuestionIndex = currentQuestionNum;
+        const nextQid = `q${currentQuestionNum + 1}`;
+        if (quizAnswers[nextQid]) {
+            setTimeout(() => restoreSelection(currentQuestionNum + 1, quizAnswers[nextQid]), 100);
+        }
+    }
+}
+
+function goToPreviousQuestion(currentQuestionNum) {
+    if (currentQuestionNum > 1) {
+        goToPage(`question-${currentQuestionNum - 1}`);
+        currentQuestionIndex = currentQuestionNum - 2;
+        const prevQid = `q${currentQuestionNum - 1}`;
+        if (quizAnswers[prevQid]) {
+            setTimeout(() => restoreSelection(currentQuestionNum - 1, quizAnswers[prevQid]), 100);
+        }
+    }
+}
+
+function restoreSelection(questionNum, value) {
+    const page = document.getElementById(`question-${questionNum}`);
+    if (!page) return;
+    const options = page.querySelectorAll('.option-card');
+    options.forEach(option => {
+        option.classList.remove('selected');
+        const attr = option.getAttribute('onclick') || '';
+        const matches = attr.match(/(\d+)/g);
+        if (!matches || matches.length === 0) return;
+        const optionValue = parseInt(matches[matches.length - 1], 10);
+        if (optionValue === value) option.classList.add('selected');
+    });
+}
+
+function submitQuiz() {
+    if (Object.keys(quizAnswers).length < totalQuestions) {
+        alert('Please answer all questions before submitting.');
+        return;
+    }
+
+    let totalStressScore = 0;
+    for (let i = 1; i <= totalQuestions; i++) {
+        totalStressScore += quizAnswers[`q${i}`] || 0;
+    }
+
+    let level;
+    if (totalStressScore <= 7) level = "Low";
+    else if (totalStressScore <= 14) level = "Moderate";
+    else level = "High";
+
+    saveStressAssessment(totalStressScore, level);
+
+    const levelEl = document.getElementById('stress-level');
+    if (levelEl) levelEl.innerText = level;
+
+    const stressBar = document.getElementById('stress-bar');
+    if (stressBar) {
+        stressBar.className = 'progress-bar';
+        stressBar.classList.add(level.toLowerCase());
+        const fill = stressBar.querySelector('.progress-fill');
+        if (fill) fill.style.width = `${(totalStressScore / 21) * 100}%`;
+    }
+
+    goToPage('analysis-page');
+}
+
+// API interactions (login/signup/save report/load reports etc.)
 async function signup() {
-    const username = document.getElementById('new-username').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('new-password').value;
-    const name = document.getElementById('name').value;
-    const age = document.getElementById('age').value;
+    const username = document.getElementById('new-username')?.value;
+    const email = document.getElementById('email')?.value;
+    const password = document.getElementById('new-password')?.value;
+    const name = document.getElementById('name')?.value;
+    const age = document.getElementById('age')?.value;
 
     if (!username || !email || !password || !name || !age) {
         alert("Please fill in all fields");
         return;
     }
 
-    const userData = { username, email, password, name, age: parseInt(age) };
+    const userData = { username, email, password, name, age: parseInt(age, 10) };
 
     try {
         const response = await fetch(`${API_BASE_URL}/signup`, {
@@ -108,193 +301,120 @@ async function signup() {
 
         if (response.ok) {
             alert("Signup successful! Please login.");
-            document.getElementById('signup-form').reset();
+            const form = document.getElementById('signup-form');
+            if (form) form.reset();
 
+            // small delay then navigate
             setTimeout(() => {
                 isNavigating = true;
                 goToPage('login-page');
                 isNavigating = false;
             }, 100);
         } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert("Signup failed: " + (errorData.message || 'Unknown error'));
+            const err = await response.json().catch(() => ({}));
+            alert("Signup failed: " + (err.message || 'Unknown error'));
         }
-    } catch (error) {
-        console.error("Error during signup:", error);
-        alert("An error occurred during signup. Please try again.");
+    } catch (err) {
+        console.error("Signup error:", err);
+        alert("An error occurred during signup. Try again.");
     }
 }
 
-// --- FIX quiz submit enable ---
-function selectAnswer(questionId, value) {
-    quizAnswers[questionId] = value;
-    const questionNum = parseInt(questionId.substring(1));
-
-    const currentQuestionPage = document.getElementById(`question-${questionNum}`);
-    const options = currentQuestionPage.querySelectorAll('.option-card');
-    options.forEach(option => option.classList.remove('selected'));
-
-    const selectedOption = Array.from(options).find(option => {
-        const matches = option.getAttribute('onclick').match(/(\\d+)/g);
-        return matches && parseInt(matches[matches.length - 1], 10) === value;
-    });
-    if (selectedOption) selectedOption.classList.add('selected');
-
-    if (Object.keys(quizAnswers).length === totalQuestions) {
-        document.getElementById('submit-btn').disabled = false;
-    }
-
-    if (questionNum < totalQuestions) {
-        setTimeout(() => goToNextQuestion(questionNum), 800);
-    }
-}
-
-// Function to handle user login
 async function login() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.getElementById('username')?.value;
+    const password = document.getElementById('password')?.value;
 
     if (!username || !password) {
         alert("Please enter both username and password");
         return;
     }
 
-    const loginData = { username: username, password: password };
-
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(loginData)
+            body: JSON.stringify({ username, password })
         });
 
         if (response.ok) {
-            const loginResponse = await response.json();
-            authToken = loginResponse.token;
-            currentUser = loginResponse.user;
-            document.getElementById('user-name').innerText = currentUser.name || currentUser.username;
-            
-            // Show logout button
+            const data = await response.json();
+            authToken = data.token;
+            currentUser = data.user;
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.innerText = currentUser.name || currentUser.username;
+
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) logoutBtn.classList.remove('hidden');
-            
+
             goToPage('main-page');
             updateLastCheckedTime();
         } else {
-            const errorText = await response.text();
-            alert("Login failed: " + errorText);
+            const text = await response.text();
+            alert("Login failed: " + text);
         }
-    } catch (error) {
-        console.error("Error during login:", error);
-        alert("An error occurred during login. Please try again.");
+    } catch (err) {
+        console.error("Login error:", err);
+        alert("An error occurred during login. Try again.");
     }
 }
 
-// Function to update the last checked time on the dashboard
 async function updateLastCheckedTime() {
     if (!currentUser || !authToken) return;
-    
-    // Reset to default values first (important for new users)
-    document.getElementById('last-checked').innerText = 'Never';
-    document.getElementById('current-stress').innerText = '--';
-    
+    const lastCheckedEl = document.getElementById('last-checked');
+    const currentStressEl = document.getElementById('current-stress');
+    if (lastCheckedEl) lastCheckedEl.innerText = 'Never';
+    if (currentStressEl) currentStressEl.innerText = '--';
+
     try {
         const response = await fetch(`${API_BASE_URL}/stress-reports/${currentUser.id}`, {
             headers: getAuthHeaders()
         });
         if (response.ok) {
             const reports = await response.json();
-            if (reports.length > 0) {
-                reports.sort((a, b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
-                const lastReport = reports[0];
-                document.getElementById('last-checked').innerText = new Date(lastReport.assessmentDate).toLocaleString();
-                document.getElementById('current-stress').innerText = lastReport.stressLevel;
+            if (Array.isArray(reports) && reports.length > 0) {
+                reports.sort((a,b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
+                const last = reports[0];
+                if (lastCheckedEl) lastCheckedEl.innerText = new Date(last.assessmentDate).toLocaleString();
+                if (currentStressEl) currentStressEl.innerText = last.stressLevel;
             }
-            // If reports.length is 0, the default values set above will remain
         }
-    } catch (error) {
-        console.error("Error fetching last checked time:", error);
-        // Keep default values on error
+    } catch (err) {
+        console.error("Error fetching reports:", err);
     }
 }
 
-// Function to handle logo click - only allow navigation when logged in
 function handleLogoClick() {
-    // Only allow navigation to main-page if user is logged in
-    if (currentUser && authToken) {
-        goToPage('main-page');
-    }
-    // If not logged in, do nothing (no navigation)
+    if (currentUser && authToken) goToPage('main-page');
+    else goToPage('welcome-page');
 }
 
-// Function to handle logout
 function logout() {
     currentUser = null;
     authToken = null;
-    
-    // Hide logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.classList.add('hidden');
-    
-    // Clear dashboard data to prevent data leakage between users
-    document.getElementById('last-checked').innerText = 'Never';
-    document.getElementById('current-stress').innerText = '--';
-    document.getElementById('user-name').innerText = '';
-    
-    // Clear login form credentials
-    const usernameField = document.getElementById('username');
-    const passwordField = document.getElementById('password');
-    
-    if (usernameField) usernameField.value = '';
-    if (passwordField) passwordField.value = '';
-    
-    // Also clear signup form if it exists
-    const signupFields = ['new-username', 'email', 'new-password', 'name', 'age'];
-    signupFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) field.value = '';
+
+    const lastCheckedEl = document.getElementById('last-checked');
+    const currentStressEl = document.getElementById('current-stress');
+    const userNameEl = document.getElementById('user-name');
+
+    if (lastCheckedEl) lastCheckedEl.innerText = 'Never';
+    if (currentStressEl) currentStressEl.innerText = '--';
+    if (userNameEl) userNameEl.innerText = '';
+
+    ['new-username','email','new-password','name','age','username','password'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
-    
+
     goToPage('login-page');
 }
 
-// Function to calculate the stress level from the questionnaire
-function calculateStressLevel() {
-    const answers = document.querySelectorAll('#questionnaire-form input[type="radio"]:checked');
-    if (answers.length < 7) {
-        alert("Please answer all questions");
-        return;
-    }
-    
-    let totalStressScore = 0;
-    answers.forEach(answer => {
-        totalStressScore += parseInt(answer.value);
-    });
-
-    let level;
-    if (totalStressScore <= 7) level = "Low";
-    else if (totalStressScore <= 14) level = "Moderate";
-    else level = "High";
-
-    saveStressAssessment(totalStressScore, level);
-
-    document.getElementById('stress-level').innerText = level;
-    const stressBar = document.getElementById('stress-bar');
-    stressBar.className = 'progress-bar'; 
-    stressBar.classList.add(level.toLowerCase());
-    stressBar.querySelector('.progress-fill').style.width = `${(totalStressScore / 21) * 100}%`;
-    goToPage('analysis-page');
-}
-
-// Function to save stress assessment to the backend
+// Saving and loading assessments (short versions)
 async function saveStressAssessment(totalStressScore, stressLevel) {
     if (!currentUser || !authToken) return;
 
-    const assessment = {
-        userId: currentUser.id,
-        totalStressScore: totalStressScore,
-        stressLevel: stressLevel
-    };
+    const assessment = { userId: currentUser.id, totalStressScore, stressLevel };
 
     try {
         const response = await fetch(`${API_BASE_URL}/stress-assessment`, {
@@ -302,13 +422,10 @@ async function saveStressAssessment(totalStressScore, stressLevel) {
             headers: getAuthHeaders(),
             body: JSON.stringify(assessment)
         });
-        if (response.ok) {
-            updateLastCheckedTime();
-        } else {
-            console.error("Failed to save assessment:", await response.text());
-        }
-    } catch (error) {
-        console.error("Error saving assessment:", error);
+        if (response.ok) updateLastCheckedTime();
+        else console.error("Failed to save:", await response.text());
+    } catch (err) {
+        console.error("Error saving assessment:", err);
     }
 }
 
@@ -828,4 +945,52 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('popstate', handlePopState);
+    initializePageFromURL();
+
+    // Proceed button
+    const proceedBtn = document.getElementById('proceed-button');
+    if (proceedBtn) proceedBtn.addEventListener('click', () => goToPage('login-page'));
+
+    // Login / Signup buttons (explicit ids added in index.html)
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) loginBtn.addEventListener('click', login);
+
+    const signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) signupBtn.addEventListener('click', signup);
+
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    // Quiz start (if element exists on page)
+    const startBtn = document.querySelector('.btn-large');
+    // Some markup uses inline onclick for startQuiz — but we keep this guard
+    if (startBtn) startBtn.addEventListener('click', () => {
+        if (typeof startQuiz === 'function') startQuiz();
+    });
+
+    // contact form submit
+    const contactBtn = document.querySelector('#contact-form button');
+    if (contactBtn) contactBtn.addEventListener('click', () => {
+        if (typeof submitContactForm === 'function') submitContactForm();
+    });
+
+    // keyboard enter handling for login/signup
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) loginForm.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            login();
+        }
+    });
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) signupForm.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            signup();
+        }
+    });
 });
