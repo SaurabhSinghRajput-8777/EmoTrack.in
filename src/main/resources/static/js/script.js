@@ -147,7 +147,7 @@ function selectAnswer(questionId, value) {
     page.querySelectorAll('.option-card').forEach(opt => opt.classList.remove('selected'));
 
     const selectedOption = Array.from(page.querySelectorAll('.option-card')).find(opt => {
-        const matches = (opt.getAttribute('onclick')||'').match(/(\\d+)/g);
+        const matches = (opt.getAttribute('onclick')||'').match(/(\d+)/g);
         return matches && parseInt(matches.pop(),10) === value;
     });
     selectedOption?.classList.add('selected');
@@ -178,7 +178,7 @@ function restoreSelection(qn, value) {
     const page = document.getElementById(`question-${qn}`); if (!page) return;
     page.querySelectorAll('.option-card').forEach(opt => {
         opt.classList.remove('selected');
-        const matches = (opt.getAttribute('onclick')||'').match(/(\\d+)/g);
+        const matches = (opt.getAttribute('onclick')||'').match(/(\d+)/g);
         if (matches && parseInt(matches.pop(),10) === value) opt.classList.add('selected');
     });
 }
@@ -268,26 +268,15 @@ async function loadStressReports() {
 function displayStressReports(reports) {
     const container = document.getElementById('reports-container');
     if (!container) return;
-
-    // Use the .reports-list class for the container as styled in CSS
     container.className = 'reports-list';
     container.innerHTML = "";
-
-    if (!reports || reports.length === 0) {
-        // The CSS will handle the 'empty' message automatically, so this is just a fallback.
-        return; 
-    }
+    if (!reports || reports.length === 0) return; 
 
     reports.sort((a, b) => new Date(b.assessmentDate) - new Date(a.assessmentDate));
-
     reports.forEach(report => {
         const card = document.createElement('div');
-        const stressClass = report.stressLevel.toLowerCase() + '-stress'; // Creates 'low-stress', 'moderate-stress', etc.
-        
-        // Add both base class and dynamic stress level class
+        const stressClass = report.stressLevel.toLowerCase() + '-stress';
         card.className = `report-card ${stressClass}`;
-
-        // Generate the full HTML structure that matches the CSS
         card.innerHTML = `
             <div class="report-header">
                 <div class="report-date">${new Date(report.assessmentDate).toLocaleString()}</div>
@@ -305,25 +294,24 @@ function displayStressReports(reports) {
 }
 async function loadStressAnalytics() {
     if (!currentUser || !authToken) return;
-    
     goToPage('analytics-page');
-
     try {
         const res = await fetch(`${API_BASE_URL}/stress-analytics/${currentUser.id}`, { headers: getAuthHeaders() });
         if (res.ok) {
             const data = await res.json();
             displayStressAnalytics(data);
         }
-    } catch (e) {
-        console.error("Load analytics error", e);
-    }
+    } catch (e) { console.error("Load analytics error", e); }
 }
 function displayStressAnalytics(data) {
-    if(!data){alert("No analytics");return;}
-    document.getElementById('avg-score').innerText=data.averageScore?.toFixed(2)||"--";
-    document.getElementById('most-freq-level').innerText=data.mostFrequentLevel||"--";
-    document.getElementById('report-count').innerText=data.reportCount||"--";
-    drawDistributionChart(data.levelDistribution||{}); drawTrendChart(data.trendData||[]);
+    if (!data) { alert("No analytics data available to display."); return; }
+    document.getElementById('avg-score').innerText = data.averageScore?.toFixed(2) || "--";
+    document.getElementById('most-freq-level').innerText = data.mostFrequentLevel || "--";
+    document.getElementById('report-count').innerText = data.reportCount || "--";
+    drawDistributionChart(data.levelDistribution || {});
+    drawTrendChart(data.trendData || []);
+    displayInsights(data.insights);
+    displayMonthlyComparison(data.monthlyComparison);
 }
 function drawDistributionChart(dist) {
     const c=document.getElementById('distribution-chart'); if(!c) return;
@@ -331,31 +319,54 @@ function drawDistributionChart(dist) {
     const levels=['Low','Moderate','High']; const colors=['#4CAF50','#FFC107','#F44336'];
     const total=levels.reduce((s,l)=>s+(dist[l]||0),0)||1;
     let start=0; levels.forEach((l,i)=>{const val=dist[l]||0;const angle=(val/total)*2*Math.PI;
-        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,100,start,start+angle); ctx.closePath();
+        ctx.beginPath(); ctx.moveTo(c.width/2, c.height/2); ctx.arc(c.width/2, c.height/2, Math.min(c.width, c.height)/2 - 10, start, start+angle); ctx.closePath();
         ctx.fillStyle=colors[i]; ctx.fill(); start+=angle;});
 }
 function drawTrendChart(trend) {
     const c=document.getElementById('trend-chart'); if(!c) return;
     const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
     if(!trend||trend.length===0) return;
-    const points=trend.map(t=>({date:new Date(t.assessmentDate),score:t.totalStressScore}));
+    const points=trend.map(t=>({date:new Date(t.assessmentDate).getTime(),score:t.totalStressScore}));
     const minDate=Math.min(...points.map(p=>p.date)), maxDate=Math.max(...points.map(p=>p.date));
-    const minScore=0, maxScore=21;
-    function x(d){return ((d-minDate)/(maxDate-minDate))*300+50;}
-    function y(s){return 250-((s-minScore)/(maxScore-minScore))*200;}
+    const minScore=0, maxScore=21; const padding = 40;
+    const chartW = c.width - 2 * padding, chartH = c.height - 2 * padding;
+    function x(d){ return ((d-minDate)/(maxDate-minDate||1))*chartW+padding; }
+    function y(s){ return c.height-padding-((s-minScore)/(maxScore-minScore))*chartH; }
     ctx.beginPath(); ctx.moveTo(x(points[0].date),y(points[0].score));
     for(let i=1;i<points.length;i++){ctx.lineTo(x(points[i].date),y(points[i].score));}
     ctx.strokeStyle='#2196F3'; ctx.lineWidth=2; ctx.stroke();
     points.forEach(p=>{ctx.beginPath();ctx.arc(x(p.date),y(p.score),4,0,2*Math.PI);ctx.fillStyle='#2196F3';ctx.fill();});
 }
+function displayInsights(insights = []) {
+    const container = document.getElementById('insights-list'); if (!container) return; container.innerHTML = '';
+    if (insights.length === 0) { container.innerHTML = '<p class="no-data-message">No specific insights available yet. Keep tracking to see patterns.</p>'; return; }
+    insights.forEach(insightText => { const item = document.createElement('div'); item.className = 'insight-item'; item.innerHTML = `<i class="fas fa-lightbulb"></i> <p>${insightText}</p>`; container.appendChild(item); });
+}
+function displayMonthlyComparison(comparison = {}) {
+    const container = document.getElementById('monthly-stats'); if (!container) return; container.innerHTML = '';
+    if (!comparison.currentMonthAvg || !comparison.previousMonthAvg) { container.innerHTML = '<p class="no-data-message">Not enough data for a monthly comparison.</p>'; return; }
+    const diff = comparison.currentMonthAvg - comparison.previousMonthAvg; let trendClass = 'stable';
+    if (diff < -1) trendClass = 'improvement'; if (diff > 1) trendClass = 'decline';
+    container.className = 'monthly-comparison-grid';
+    container.innerHTML = `<div class="comparison-card"><h4>Previous Month</h4><div class="stat-large">${comparison.previousMonthAvg.toFixed(1)}</div><small>Average Score</small></div><div class="comparison-card ${trendClass}"><h4>Current Month</h4><div class="stat-large">${comparison.currentMonthAvg.toFixed(1)}</div><small>Average Score</small></div>`;
+}
 
 // ====================== TIPS / CONSULT ======================
-function showCopingStrategies(level) {
-    const strategies={Low:['Maintain routine exercise','Practice mindfulness','Stay socially connected','Keep healthy sleep habits'],
-        Moderate:['Practice deep breathing','Take breaks from work','Limit caffeine','Seek support from friends'],
-        High:['Consult a professional','Prioritize self-care','Engage in relaxing hobbies','Consider therapy/meditation apps']};
-    const container=document.getElementById('coping-strategies'); container.innerHTML="";
-    (strategies[level]||["No tips available"]).forEach(t=>{const card=document.createElement('div');card.className='tip-card';card.innerText=t;container.appendChild(card);});
+function showCopingStrategies(stressLevel) {
+    const level = stressLevel || document.getElementById('stress-level')?.innerText;
+    const strategies = {
+        Low: ['Maintain routine exercise', 'Practice mindfulness', 'Stay socially connected', 'Keep healthy sleep habits'],
+        Moderate: ['Practice deep breathing', 'Take breaks from work', 'Limit caffeine', 'Seek support from friends'],
+        High: ['Consult a professional', 'Prioritize self-care', 'Engage in relaxing hobbies', 'Consider therapy/meditation apps']
+    };
+    const container = document.getElementById('coping-strategies');
+    if (!container) return;
+    container.innerHTML = "";
+    (strategies[level] || ["No specific tips available. Please consult a professional."]).forEach(tipText => {
+        const item = document.createElement('li');
+        item.innerText = tipText;
+        container.appendChild(item);
+    });
     goToPage('management-tips-page');
 }
 function submitContactForm() {
@@ -371,12 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('popstate', handlePopState);
     initializePageFromURL();
 
-    document.getElementById('proceed-button')?.addEventListener('click', ()=>goToPage('login-page'));
+    document.getElementById('proceed-button')?.addEventListener('click', () => goToPage('login-page'));
     document.getElementById('login-btn')?.addEventListener('click', login);
     document.getElementById('signup-btn')?.addEventListener('click', signup);
     document.getElementById('logout-btn')?.addEventListener('click', logout);
     document.querySelector('#contact-form button')?.addEventListener('click', submitContactForm);
+    document.querySelector('.consultation-btn')?.addEventListener('click', () => goToPage('consultation-page'));
 
-    document.getElementById('login-form')?.addEventListener('keypress',(e)=>{if(e.key==='Enter'){e.preventDefault();login();}});
-    document.getElementById('signup-form')?.addEventListener('keypress',(e)=>{if(e.key==='Enter'){e.preventDefault();signup();}});
+    document.getElementById('login-form')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); login(); } });
+    document.getElementById('signup-form')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); signup(); } });
 });
