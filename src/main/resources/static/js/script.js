@@ -344,13 +344,60 @@ function displayStressAnalytics(data) {
     });
 }
 function drawDistributionChart(dist) {
-    const c=document.getElementById('distribution-chart'); if(!c) return;
-    const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
-    const levels=['Low','Moderate','High']; const colors=['#4CAF50','#FFC107','#F44336'];
-    const total=levels.reduce((s,l)=>s+(dist[l]||0),0)||1;
-    let start=0; levels.forEach((l,i)=>{const val=dist[l]||0;const angle=(val/total)*2*Math.PI;
-        ctx.beginPath(); ctx.moveTo(c.width/2, c.height/2); ctx.arc(c.width/2, c.height/2, Math.min(c.width, c.height)/2 - 10, start, start+angle); ctx.closePath();
-        ctx.fillStyle=colors[i]; ctx.fill(); start+=angle;});
+    const c = document.getElementById('distribution-chart');
+    if (!c) return;
+
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const levels = ['Low', 'Moderate', 'High'];
+    const colors = ['#4CAF50', '#FFC107', '#F44336'];
+    const total = levels.reduce((sum, level) => sum + (dist[level] || 0), 0);
+
+    if (total === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText('No distribution data available', c.width / 2, c.height / 2);
+        return;
+    }
+
+    let startAngle = -0.5 * Math.PI; // Start at the top
+    const centerX = c.width / 2;
+    const centerY = c.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    levels.forEach((level, i) => {
+        const value = dist[level] || 0;
+        if (value === 0) return; // Skip drawing slices with no data
+
+        const sliceAngle = (value / total) * 2 * Math.PI;
+        const endAngle = startAngle + sliceAngle;
+
+        // Draw the slice
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+
+        // --- THIS IS THE MISSING CODE THAT DRAWS THE TEXT ---
+        // Calculate the position for the label
+        const labelAngle = startAngle + sliceAngle / 2;
+        const labelX = centerX + Math.cos(labelAngle) * (radius / 1.5);
+        const labelY = centerY + Math.sin(labelAngle) * (radius / 1.5);
+
+        // Draw the text
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Roboto';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${level} (${value})`, labelX, labelY);
+        // --------------------------------------------------
+
+        startAngle = endAngle; // Update the start angle for the next slice
+    });
 }
 function drawTrendChart(trend) {
     const c=document.getElementById('trend-chart'); if(!c) return;
