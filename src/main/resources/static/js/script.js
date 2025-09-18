@@ -1,20 +1,16 @@
 // API Base URL - Change this to match your Spring Boot server
+// --- FIXED script.js ---
+
 const API_BASE_URL = "https://emotrackin-production.up.railway.app/api";
 
-// Current logged in user data and token
 let currentUser = null;
 let authToken = null;
-
-// Quiz state management
 let quizAnswers = {};
 let currentQuestionIndex = 0;
 const totalQuestions = 7;
-
-// Current page tracking for browser history
 let currentPage = 'welcome-page';
-let isNavigating = false; // Add this new flag
+let isNavigating = false;
 
-// Helper function to get authentication headers
 function getAuthHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -22,7 +18,6 @@ function getAuthHeaders() {
     };
 }
 
-// Function to get page title for browser history
 function getPageTitle(pageId) {
     const pageTitles = {
         'welcome-page': 'Welcome - EmoTrack.in',
@@ -46,53 +41,31 @@ function getPageTitle(pageId) {
     return pageTitles[pageId] || 'EmoTrack.in';
 }
 
-// Function to check if user can access a page
 function canAccessPage(pageId) {
     const authRequiredPages = ['main-page', 'reports-page', 'analytics-page', 'management-tips-page', 'consultation-page'];
     const questionPages = ['question-1', 'question-2', 'question-3', 'question-4', 'question-5', 'question-6', 'question-7'];
-    
-    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
-        return currentUser && authToken;
-    }
-    return true;
+    return !(authRequiredPages.includes(pageId) || questionPages.includes(pageId)) || (currentUser && authToken);
 }
 
-// Function to navigate between pages with history support
 function goToPage(pageId, addToHistory = true) {
-    // Don't navigate to the same page
     if (currentPage === pageId) return;
 
-    // Check if user can access this page
     if (!canAccessPage(pageId)) {
-    if (!isNavigating) { 
-        goToPage('login-page', true);
-        return; // <-- only return if we actually redirected
-    }
-}
-
-
-    // Store previous page
-    const previousPage = currentPage;
-
-    // Hide all pages
-    const pages = document.querySelectorAll('.page');
-    pages.forEach(page => {
-        if (!page.classList.contains('hidden')) {
-            page.classList.add('hidden');
+        if (!isNavigating) {
+            goToPage('login-page', true);
         }
-    });
+        return;
+    }
 
-    // Show the target page
+    const previousPage = currentPage;
+    document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
         targetPage.classList.remove('hidden');
         currentPage = pageId;
-        
-        // Update page title
         document.title = getPageTitle(pageId);
     }
 
-    // Add to browser history (unless we're handling a back/forward event)
     if (addToHistory && window.history) {
         const state = { page: pageId, timestamp: Date.now() };
         const title = getPageTitle(pageId);
@@ -100,97 +73,18 @@ function goToPage(pageId, addToHistory = true) {
         window.history.pushState(state, title, url);
     }
 
-    // Handle page-specific logic
     handlePageNavigation(pageId, previousPage);
 }
 
-// Function to handle page-specific navigation logic
-function handlePageNavigation(pageId, previousPage) {
-    // Show/hide logout button based on authentication state
-    const logoutBtn = document.getElementById('logout-btn');
-    const authRequiredPages = ['main-page', 'reports-page', 'analytics-page', 'management-tips-page', 'consultation-page'];
-    const questionPages = ['question-1', 'question-2', 'question-3', 'question-4', 'question-5', 'question-6', 'question-7'];
-    
-    if (authRequiredPages.includes(pageId) || questionPages.includes(pageId)) {
-        if (logoutBtn && currentUser && authToken) {
-            logoutBtn.classList.remove('hidden');
-        }
+function handleLogoClick() {
+    if (currentUser && authToken) {
+        goToPage('main-page');
     } else {
-        if (logoutBtn && !currentUser) {
-            logoutBtn.classList.add('hidden');
-        }
-    }
-
-    // Reset questionnaire form if navigating to that page
-    if (pageId === 'questionnaire-page') {
-        resetQuestionnaireForm();
-    }
-
-    // Handle question navigation for quiz system
-    if (pageId.startsWith('question-')) {
-        const questionNum = parseInt(pageId.split('-')[1]);
-        currentQuestionIndex = questionNum - 1;
-        
-        // Restore previous selection if exists
-        const questionId = `q${questionNum}`;
-        if (quizAnswers[questionId]) {
-            setTimeout(() => {
-                restoreSelection(questionNum, quizAnswers[questionId]);
-            }, 100);
-        }
+        goToPage('welcome-page');
     }
 }
 
-// Handle browser back/forward buttons
-function handlePopState(event) {
-    if (event.state && event.state.page) {
-        goToPage(event.state.page, false); // false = don't add to history again
-    } else {
-        // Handle direct URL access or refresh
-        const hash = window.location.hash.slice(1);
-        const pageId = hash || 'welcome-page';
-        
-        // Allow navigation to public pages
-        if (pageId === 'login-page' || pageId === 'signup-page' || pageId === 'welcome-page') {
-            goToPage(pageId, false);
-        } else if (canAccessPage(pageId)) {
-            goToPage(pageId, false);
-        } else {
-            goToPage('welcome-page', false);
-        }
-    }
-}
-
-// Function to initialize page from URL
-function initializePageFromURL() {
-    // Don't initialize if we're in the middle of a navigation
-    if (isNavigating) return;
-    
-    const hash = window.location.hash.slice(1);
-    const pageId = hash || 'welcome-page';
-    
-    // Don't auto-redirect if user is on login or signup pages
-    if (pageId === 'login-page' || pageId === 'signup-page') {
-        goToPage(pageId, false);
-        return;
-    }
-    
-    if (canAccessPage(pageId)) {
-        goToPage(pageId, false);
-    } else {
-        goToPage('welcome-page', false);
-    }
-}
-
-// Function to reset the questionnaire form
-function resetQuestionnaireForm() {
-    const answers = document.querySelectorAll('#questionnaire-form input[type="radio"]');
-    answers.forEach(answer => {
-        answer.checked = false; // Uncheck all radio buttons
-    });
-}
-
-// Function to handle user signup
+// --- FIX in signup flow ---
 async function signup() {
     const username = document.getElementById('new-username').value;
     const email = document.getElementById('email').value;
@@ -203,13 +97,7 @@ async function signup() {
         return;
     }
 
-    const userData = {
-        username: username,
-        email: email,
-        password: password,
-        name: name,
-        age: parseInt(age)
-    };
+    const userData = { username, email, password, name, age: parseInt(age) };
 
     try {
         const response = await fetch(`${API_BASE_URL}/signup`, {
@@ -219,29 +107,45 @@ async function signup() {
         });
 
         if (response.ok) {
-            const responseData = await response.json();
             alert("Signup successful! Please login.");
-            
-            // Clear signup form
-            document.getElementById('new-username').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('new-password').value = '';
-            document.getElementById('name').value = '';
-            document.getElementById('age').value = '';
-            
-            // Set navigation flag and force navigation to login page
-            isNavigating = true;
+            document.getElementById('signup-form').reset();
+
             setTimeout(() => {
+                isNavigating = true;
                 goToPage('login-page');
-                isNavigating = false; // Reset flag after navigation
+                isNavigating = false;
             }, 100);
         } else {
-            const errorData = await response.json();
-            alert("Signup failed: " + (errorData.message || errorData || 'Unknown error'));
+            const errorData = await response.json().catch(() => ({}));
+            alert("Signup failed: " + (errorData.message || 'Unknown error'));
         }
     } catch (error) {
         console.error("Error during signup:", error);
         alert("An error occurred during signup. Please try again.");
+    }
+}
+
+// --- FIX quiz submit enable ---
+function selectAnswer(questionId, value) {
+    quizAnswers[questionId] = value;
+    const questionNum = parseInt(questionId.substring(1));
+
+    const currentQuestionPage = document.getElementById(`question-${questionNum}`);
+    const options = currentQuestionPage.querySelectorAll('.option-card');
+    options.forEach(option => option.classList.remove('selected'));
+
+    const selectedOption = Array.from(options).find(option => {
+        const matches = option.getAttribute('onclick').match(/(\\d+)/g);
+        return matches && parseInt(matches[matches.length - 1], 10) === value;
+    });
+    if (selectedOption) selectedOption.classList.add('selected');
+
+    if (Object.keys(quizAnswers).length === totalQuestions) {
+        document.getElementById('submit-btn').disabled = false;
+    }
+
+    if (questionNum < totalQuestions) {
+        setTimeout(() => goToNextQuestion(questionNum), 800);
     }
 }
 

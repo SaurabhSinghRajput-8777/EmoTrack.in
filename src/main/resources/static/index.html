@@ -33,10 +33,16 @@
             <div class="page-content auth-form-container">
                 <h2 class="page-title">Login</h2>
                 <form id="login-form">
+                    <label for="username">Username</label>
                     <input type="text" id="username" placeholder="Username" required class="form-input">
+
+                    <label for="password">Password</label>
                     <input type="password" id="password" placeholder="Password" required class="form-input">
+
                     <button type="button" class="btn btn-primary">Login</button>
-                    <p class="auth-switch">Don't have an account? <a href="#/signup-page" onclick="goToPage('signup-page')">Sign up here</a></p>
+                    <p class="auth-switch">Don't have an account? 
+                        <a href="#signup-page" onclick="goToPage('signup-page')">Sign up here</a>
+                    </p>
                 </form>
             </div>
         </section>
@@ -45,13 +51,25 @@
             <div class="page-content auth-form-container">
                 <h2 class="page-title">Sign Up</h2>
                 <form id="signup-form">
+                    <label for="new-username">Username</label>
                     <input type="text" id="new-username" placeholder="Username" required class="form-input">
+
+                    <label for="email">Email</label>
                     <input type="email" id="email" placeholder="Email" required class="form-input">
+
+                    <label for="new-password">Password</label>
                     <input type="password" id="new-password" placeholder="Password" required class="form-input">
+
+                    <label for="name">Your Name</label>
                     <input type="text" id="name" placeholder="Your Name" required class="form-input">
+
+                    <label for="age">Your Age</label>
                     <input type="number" id="age" placeholder="Your Age" required min="18" max="100" class="form-input">
+
                     <button type="button" class="btn btn-primary">Sign Up</button>
-                    <p class="auth-switch">Already have an account? <a href="#" onclick="goToPage('login-page')">Login here</a></p>
+                    <p class="auth-switch">Already have an account? 
+                        <a href="#login-page" onclick="goToPage('login-page')">Login here</a>
+                    </p>
                 </form>
             </div>
         </section>
