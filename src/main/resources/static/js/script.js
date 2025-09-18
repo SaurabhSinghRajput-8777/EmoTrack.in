@@ -145,7 +145,11 @@ function handlePopState(event) {
         // Handle direct URL access or refresh
         const hash = window.location.hash.slice(1);
         const pageId = hash || 'welcome-page';
-        if (canAccessPage(pageId)) {
+        
+        // Allow navigation to public pages
+        if (pageId === 'login-page' || pageId === 'signup-page' || pageId === 'welcome-page') {
+            goToPage(pageId, false);
+        } else if (canAccessPage(pageId)) {
             goToPage(pageId, false);
         } else {
             goToPage('welcome-page', false);
@@ -157,6 +161,12 @@ function handlePopState(event) {
 function initializePageFromURL() {
     const hash = window.location.hash.slice(1);
     const pageId = hash || 'welcome-page';
+    
+    // Don't auto-redirect if user is on login or signup pages
+    if (pageId === 'login-page' || pageId === 'signup-page') {
+        goToPage(pageId, false);
+        return;
+    }
     
     if (canAccessPage(pageId)) {
         goToPage(pageId, false);
@@ -202,11 +212,23 @@ async function signup() {
         });
 
         if (response.ok) {
+            const responseData = await response.json();
             alert("Signup successful! Please login.");
-            goToPage('login-page');
+            
+            // Clear signup form
+            document.getElementById('new-username').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            
+            // Force navigation to login page
+            setTimeout(() => {
+                goToPage('login-page');
+            }, 100);
         } else {
-            const errorText = await response.text();
-            alert("Signup failed: " + errorText);
+            const errorData = await response.json();
+            alert("Signup failed: " + (errorData.message || errorData || 'Unknown error'));
         }
     } catch (error) {
         console.error("Error during signup:", error);
