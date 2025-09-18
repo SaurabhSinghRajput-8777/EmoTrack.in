@@ -304,14 +304,44 @@ async function loadStressAnalytics() {
     } catch (e) { console.error("Load analytics error", e); }
 }
 function displayStressAnalytics(data) {
-    if (!data) { alert("No analytics data available to display."); return; }
-    document.getElementById('avg-score').innerText = data.averageScore?.toFixed(2) || "--";
-    document.getElementById('most-freq-level').innerText = data.mostFrequentLevel || "--";
-    document.getElementById('report-count').innerText = data.reportCount || "--";
-    drawDistributionChart(data.levelDistribution || {});
-    drawTrendChart(data.trendData || []);
-    displayInsights(data.insights);
-    displayMonthlyComparison(data.monthlyComparison);
+    if (!data || data.message) {
+        alert("No analytics data available to display.");
+        // You can optionally clear the analytics page or show a message here
+        return;
+    }
+
+    // --- FIX: Use the correct keys from your backend API ---
+    const totalAssessments = data.totalAssessments || 0;
+    const averageScore = data.averageStressScore || 0;
+    const distribution = data.stressLevelDistribution || {};
+    const trend = data.weeklyTrend || {};
+    const comparison = data.monthlyComparison || {};
+    const insights = data.insights || [];
+
+    // --- FIX: Logic to find the most frequent level from the distribution data ---
+    let mostFrequentLevel = "--";
+    if (Object.keys(distribution).length > 0) {
+        mostFrequentLevel = Object.keys(distribution).reduce((a, b) => distribution[a] > distribution[b] ? a : b);
+    }
+
+    // Populate top summary cards with the correct data
+    document.getElementById('report-count').innerText = totalAssessments;
+    document.getElementById('avg-score').innerText = averageScore.toFixed(2);
+    document.getElementById('most-freq-level').innerText = mostFrequentLevel;
+
+    // Draw charts with the correct data
+    // NOTE: Your new draw functions expect slightly different data structures than your old ones.
+    // This code adapts the backend data for the NEW chart functions.
+    drawDistributionChart(distribution); 
+    drawTrendChart(trend.scores ? trend.scores.map((score, index) => ({ assessmentDate: trend.labels[index], totalStressScore: score })) : []);
+
+    // Populate the other sections
+    displayInsights(insights);
+    // Adapting monthly comparison data for the new display function
+    displayMonthlyComparison({ 
+        currentMonthAvg: comparison.currentMonthAverage, 
+        previousMonthAvg: comparison.previousMonthAverage 
+    });
 }
 function drawDistributionChart(dist) {
     const c=document.getElementById('distribution-chart'); if(!c) return;
