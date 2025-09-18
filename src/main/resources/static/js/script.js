@@ -316,7 +316,7 @@ function showCopingStrategies(level) {
     const strategies={Low:['Maintain routine exercise','Practice mindfulness','Stay socially connected','Keep healthy sleep habits'],
         Moderate:['Practice deep breathing','Take breaks from work','Limit caffeine','Seek support from friends'],
         High:['Consult a professional','Prioritize self-care','Engage in relaxing hobbies','Consider therapy/meditation apps']};
-    const container=document.getElementById('tips-container'); container.innerHTML="";
+    const container=document.getElementById('coping-strategies'); container.innerHTML="";
     (strategies[level]||["No tips available"]).forEach(t=>{const card=document.createElement('div');card.className='tip-card';card.innerText=t;container.appendChild(card);});
     goToPage('management-tips-page');
 }

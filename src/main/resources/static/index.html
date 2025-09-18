@@ -33,10 +33,10 @@
         <div class="page-content auth-form-container">
             <h2 class="page-title">Login</h2>
             <form id="login-form">
-                <label for="username">Username</label>
+                
                 <input type="text" id="username" placeholder="Username" required class="form-input">
 
-                <label for="password">Password</label>
+                
                 <input type="password" id="password" placeholder="Password" required class="form-input">
 
                 <button type="button" id="login-btn" class="btn btn-primary">Login</button>
@@ -51,19 +51,19 @@
         <div class="page-content auth-form-container">
             <h2 class="page-title">Sign Up</h2>
             <form id="signup-form">
-                <label for="new-username">Username</label>
+                
                 <input type="text" id="new-username" placeholder="Username" required class="form-input">
 
-                <label for="email">Email</label>
+                
                 <input type="email" id="email" placeholder="Email" required class="form-input">
 
-                <label for="new-password">Password</label>
+                
                 <input type="password" id="new-password" placeholder="Password" required class="form-input">
 
-                <label for="name">Your Name</label>
+                
                 <input type="text" id="name" placeholder="Your Name" required class="form-input">
 
-                <label for="age">Your Age</label>
+                
                 <input type="number" id="age" placeholder="Your Age" required min="18" max="100" class="form-input">
 
                 <button type="button" id="signup-btn" class="btn btn-primary">Sign Up</button>
@@ -430,7 +430,7 @@
             <div class="page-content">
                 <h2 class="page-title">Old Stress Reports</h2>
                 <p class="page-intro">Here you can view your previous stress test results.</p>
-                <button type="button" onclick="goToPage('main-page')" class="btn btn-secondary">Back to Main Page</button>
+                <div id="reports-container"></div> <button type="button" onclick="goToPage('main-page')" class="btn btn-secondary">Back to Main Page</button>
             </div>
         </section>
 
@@ -444,15 +444,15 @@
                         <div class="summary-stats">
                             <div class="stat-card">
                                 <h3>Total Assessments</h3>
-                                <div class="stat-value" id="total-assessments">0</div>
+                                <div class="stat-value" id="report-count">0</div>
                             </div>
                             <div class="stat-card">
                                 <h3>Average Score</h3>
-                                <div class="stat-value" id="average-score">0</div>
+                                <div class="stat-value" id="avg-score">0</div>
                             </div>
                             <div class="stat-card">
-                                <h3>Current Trend</h3>
-                                <div class="stat-value" id="current-trend">--</div>
+                                <h3>Most Frequent</h3>
+                                <div class="stat-value" id="most-freq-level">--</div>
                             </div>
                         </div>
                     </div>
