@@ -12,6 +12,7 @@ const totalQuestions = 7;
 
 // Current page tracking for browser history
 let currentPage = 'welcome-page';
+let isNavigating = false; // Add this new flag
 
 // Helper function to get authentication headers
 function getAuthHeaders() {
@@ -63,9 +64,11 @@ function goToPage(pageId, addToHistory = true) {
 
     // Check if user can access this page
     if (!canAccessPage(pageId)) {
-        goToPage('login-page', true);
-        return;
-    }
+        if (!isNavigating) { // Only redirect if not in middle of navigation
+            goToPage('login-page', true);
+        }
+    return;
+}
 
     // Store previous page
     const previousPage = currentPage;
@@ -159,6 +162,9 @@ function handlePopState(event) {
 
 // Function to initialize page from URL
 function initializePageFromURL() {
+    // Don't initialize if we're in the middle of a navigation
+    if (isNavigating) return;
+    
     const hash = window.location.hash.slice(1);
     const pageId = hash || 'welcome-page';
     
@@ -222,9 +228,11 @@ async function signup() {
             document.getElementById('name').value = '';
             document.getElementById('age').value = '';
             
-            // Force navigation to login page
+            // Set navigation flag and force navigation to login page
+            isNavigating = true;
             setTimeout(() => {
                 goToPage('login-page');
+                isNavigating = false; // Reset flag after navigation
             }, 100);
         } else {
             const errorData = await response.json();
