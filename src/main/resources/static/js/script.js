@@ -64,11 +64,12 @@ function goToPage(pageId, addToHistory = true) {
 
     // Check if user can access this page
     if (!canAccessPage(pageId)) {
-        if (!isNavigating) { // Only redirect if not in middle of navigation
-            goToPage('login-page', true);
-        }
-    return;
+    if (!isNavigating) { 
+        goToPage('login-page', true);
+        return; // <-- only return if we actually redirected
+    }
 }
+
 
     // Store previous page
     const previousPage = currentPage;
